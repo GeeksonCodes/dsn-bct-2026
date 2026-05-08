@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  task_a:
+    build:
+      context: .
+      dockerfile: app/task_a/Dockerfile
+    container_name: dsn-bct-task-a
+    ports:
+      - "8001:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data:/app/data
+      - ./src:/app/src
+    command: python -m app.task_a.main
+
+  task_b:
+    build:
+      context: .
+      dockerfile: app/task_b/Dockerfile
+    container_name: dsn-bct-task-b
+    ports:
+      - "8002:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data:/app/data
+      - ./src:/app/src
+    command: python -m app.task_b.main
+
+networks:
+  default:
+    name: dsn-bct-network
