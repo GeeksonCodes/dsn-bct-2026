@@ -1659,7 +1659,30 @@
             <div class="rec-rank">${item.rank}</div>
             <div class="rec-info">
               <div class="rec-title">${item.title}</div>
-       function showRecommenderError(msg) {
+              <div class="rec-explanation">${item.explanation}</div>
+            </div>
+            <div class="rec-stats">
+              <div class="rec-rating">
+                <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                ${item.avg_rating.toFixed(1)}
+              </div>
+              <div class="rec-count">${item.review_count} reviews</div>
+            </div>
+          `;
+
+          listContainer.appendChild(card);
+        });
+
+        // Toggle visibility
+        loader.style.display = 'none';
+        resultContainer.style.display = 'flex';
+      } catch (err) {
+        loader.style.display = 'none';
+        showRecommenderError(err.message);
+      }
+    }
+
+    function showRecommenderError(msg) {
       document.getElementById('b-empty').style.display = 'none';
       document.getElementById('b-loader').style.display = 'none';
       document.getElementById('b-result').style.display = 'none';
@@ -1668,6 +1691,8 @@
       document.getElementById('b-error-msg').innerText = `Error: ${msg}`;
       errBox.style.display = 'flex';
     }
+
+
 
     // Fetch API telemetry stats
     async function updateTelemetry() {
