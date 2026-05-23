@@ -51,3 +51,24 @@ Thumbs.db
 # Data (optional - uncomment if you want to exclude data folders)
 # data/raw/
 # data/processed/
+app/task_b/items.index
+app/task_b/item_meta.pkl
+*.log
+app/task_b/item.index
+app/task_b/item.meta
+# Task A artifacts
+app/task_a/rag_index.faiss
+app/task_a/rag_meta.pkl
+app/task_a/persona_cache/
+app/task_a/persona_cache_archive.zip
+app/task_a/All_Beauty_reviews.jsonl.gz
+app/task_a/game_reviews.jsonl.gz
+app/task_a/meta_All_Beauty.jsonl.gz
+app/task_a/meta_game.jsonl.gz
+app/task_a/item_cache/
+app/task_a/rich_users.csv
+app/task_a/results_nigerian.csv
+app/task_a/results_standard.csv
+app/task_a/validation_results.csv
+app/task_a/*.jsonl
+app/task_a/personal_cache/
