@@ -4,7 +4,7 @@ An advanced, containerised dual-agent system for user behavior modeling, synthet
 
 ---
 
-## 📊 Evaluation & Empirical Results
+##  Evaluation & Empirical Results
 
 ### Task A — User Review Simulator
 Simulates highly faithful product reviews conditioned on a user's historical profile and retrieved context.
@@ -50,7 +50,7 @@ Generates top-5 product recommendations utilizing hybrid algorithmic scoring and
 
 ---
 
-## 🔑 Multi-Provider API Key Pool (Section 16)
+##  Multi-Provider API Key Pool (Section 16)
 
 To guarantee production-grade availability and bypass API rate limits (`429 Too Many Requests`), the system implements a **live active-passive key manager** rotating across:
 1.  **Gemini 2.0 Flash** (Primary — best quality)
@@ -59,7 +59,7 @@ To guarantee production-grade availability and bypass API rate limits (`429 Too 
 
 ---
 
-## 🛠️ Quick Start
+##  Quick Start
 
 ### 1. Configure Keys (`.env`)
 Create a `.env` file at the repository root:
