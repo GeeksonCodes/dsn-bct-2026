@@ -793,6 +793,324 @@
       0%, 100% { opacity: 0.3; }
       50% { opacity: 1; }
     }
+
+    /* ── TELEMETRY PROGRESS BARS ── */
+    .telemetry-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 2px;
+    }
+    .telemetry-item-metrics {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .progress-bar-container {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--primary), var(--accent-gold));
+      border-radius: 3px;
+      transition: width 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    /* ── LANDING PAGE STYLES ── */
+    .hero-section {
+      text-align: center;
+      padding: 3.5rem 1.5rem;
+      margin-bottom: 2.5rem;
+      background: radial-gradient(circle at center, rgba(30, 60, 114, 0.15) 0%, transparent 70%);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+    .hero-section h2 {
+      font-family: var(--font-outfit);
+      font-size: 3rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 50%, var(--accent-gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.5px;
+    }
+    .hero-section .tagline {
+      font-family: var(--font-outfit);
+      font-size: 1.3rem;
+      color: var(--text-muted);
+      margin-bottom: 2.2rem;
+    }
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: 1.2rem;
+      margin-bottom: 2.8rem;
+    }
+    .btn-large {
+      padding: 0.9rem 2rem;
+      font-size: 1.05rem;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: var(--font-outfit);
+      font-weight: 700;
+      transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .btn-large.btn-primary {
+      background: linear-gradient(135deg, var(--primary), #112d60);
+      border: 1px solid var(--border-color);
+      color: white;
+      box-shadow: 0 4px 15px rgba(243, 156, 18, 0.15);
+    }
+    .btn-large.btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(243, 156, 18, 0.3);
+    }
+    .btn-large.btn-secondary {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+    }
+    .btn-large.btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.08);
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+    
+    /* Metrics strip */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 3.5rem;
+    }
+    .metric-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 16px;
+      padding: 1.4rem;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+    .metric-card:hover {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.08);
+      transform: translateY(-2px);
+    }
+    .metric-val {
+      font-family: var(--font-outfit);
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent-gold);
+      margin-bottom: 0.2rem;
+    }
+    .metric-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+
+    /* How It Works cards */
+    .section-title {
+      font-family: var(--font-outfit);
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 1.8rem;
+      text-align: center;
+      color: white;
+      letter-spacing: -0.5px;
+    }
+    .how-it-works-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 4.5rem;
+    }
+    .how-card {
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 18px;
+      padding: 1.6rem;
+      transition: all 0.3s ease;
+    }
+    .how-card h3 {
+      font-family: var(--font-outfit);
+      font-size: 1.20rem;
+      color: var(--accent-gold);
+      margin-bottom: 0.8rem;
+    }
+    .how-card p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .how-card:hover {
+      background: rgba(255, 255, 255, 0.03);
+      transform: translateY(-3px);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    /* Architecture layout */
+    .arch-section {
+      margin-bottom: 4.5rem;
+    }
+    .arch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 800px) {
+      .arch-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .arch-card {
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 18px;
+      padding: 2rem;
+    }
+    .arch-card h3 {
+      font-family: var(--font-outfit);
+      font-size: 1.3rem;
+      color: white;
+      margin-bottom: 1.6rem;
+      border-left: 4px solid var(--accent-gold);
+      padding-left: 0.8rem;
+    }
+    .pipeline-flow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .flow-node {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 0.6rem 1.2rem;
+      font-size: 0.85rem;
+      text-align: center;
+      width: 95%;
+      color: var(--text-main);
+      font-weight: 500;
+    }
+    .flow-arrow {
+      color: var(--accent-gold);
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+    .shared-pool-card {
+      background: linear-gradient(135deg, rgba(30, 60, 114, 0.15), rgba(14, 26, 48, 0.3));
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 18px;
+      padding: 2rem;
+      text-align: center;
+    }
+    .shared-pool-card h3 {
+      font-family: var(--font-outfit);
+      font-weight: 700;
+      color: var(--accent-gold);
+      margin-bottom: 0.6rem;
+    }
+    .shared-pool-card p {
+      font-family: var(--font-outfit);
+      font-size: 1.05rem;
+      color: white;
+      margin-bottom: 1.2rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .pool-features {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 2rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* Team Layout */
+    .team-section {
+      margin-bottom: 3.5rem;
+    }
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    .team-card {
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 18px;
+      padding: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.6rem;
+      transition: all 0.3s ease;
+    }
+    .team-card:hover {
+      background: rgba(255, 255, 255, 0.03);
+      transform: translateY(-3px);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+    .team-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--accent-gold));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-outfit);
+      font-weight: 700;
+      font-size: 1.4rem;
+      color: white;
+      box-shadow: 0 4px 15px rgba(243, 156, 18, 0.2);
+      flex-shrink: 0;
+    }
+    .team-info h4 {
+      font-family: var(--font-outfit);
+      font-size: 1.15rem;
+      color: white;
+      margin-bottom: 0.2rem;
+    }
+    .team-info .team-nickname {
+      font-size: 0.78rem;
+      color: var(--accent-gold);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+    .team-info .team-role {
+      font-size: 0.85rem;
+      color: var(--text-main);
+      margin-bottom: 0.2rem;
+    }
+    .team-info .team-task {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .team-tagline {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -805,24 +1123,156 @@
     <div class="brand">
       <div class="brand-logo">🇳🇬</div>
       <div class="brand-name">
-        <h1>DSN x BCT LLM Agent</h1>
-        <p>User Behaviour & Recommender Engine</p>
+        <h1>Naija Smart Agent</h1>
+        <p>DSN x BCT Hackathon 3.0</p>
       </div>
     </div>
     
     <div class="nav-tabs">
-      <button class="tab-btn active" onclick="switchTab('simulator')">Review Simulator (Task A)</button>
-      <button class="tab-btn" onclick="switchTab('recommender')">Product Recommender (Task B)</button>
+      <button class="tab-btn active" id="btn-tab-home" onclick="switchTab('home')">Home</button>
+      <button class="tab-btn" id="btn-tab-recommender" onclick="switchTab('recommender')">Recommender</button>
+      <button class="tab-btn" id="btn-tab-simulator" onclick="switchTab('simulator')">Review Simulator</button>
     </div>
   </header>
+
 
   <!-- Main Workspace -->
   <main>
     
     <!-- =================================================================
+         TAB 0: HOME LANDING PAGE
+         ================================================================= -->
+    <div id="tab-home" class="tab-content active">
+      
+      <!-- Hero Section -->
+      <section class="hero-section">
+        <h2>Products wey fit you</h2>
+        <p class="tagline">Explained in Pidgin, Yoruba, Hausa or Igbo</p>
+        <div class="hero-actions">
+          <button class="btn btn-primary btn-large" onclick="switchTab('recommender')">Get Recommendations 🛍️</button>
+          <button class="btn btn-secondary btn-large" onclick="switchTab('simulator')">Simulate a Review ✍️</button>
+        </div>
+        
+        <!-- Metrics strip -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-val">📊 0.42</div>
+            <div class="metric-label">NDCG@10</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-val">🎯 66%</div>
+            <div class="metric-label">Hit Rate</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-val">🗣️ 4</div>
+            <div class="metric-label">Naija Languages</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-val">👤 3</div>
+            <div class="metric-label">User Modes</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- How it works -->
+      <section style="margin-bottom: 4rem;">
+        <h2 class="section-title">How It Works</h2>
+        <div class="how-it-works-container">
+          <div class="how-card">
+            <h3>1. Preference Profiling</h3>
+            <p>Answer 3 simple questions about your product category, priorities (e.g. natural ingredients, budget), and ingredients to avoid.</p>
+          </div>
+          <div class="how-card">
+            <h3>2. RAG & Blended Matching</h3>
+            <p>Our engine queries a 112k-item database utilizing a 50/50 semantic and popularity blend scoring configuration to fetch matches.</p>
+          </div>
+          <div class="how-card">
+            <h3>3. Multilingual Reranking</h3>
+            <p>Gemini and ultra-fast fallbacks re-score the items, outputting friendly Pidgin, Yoruba, Hausa, or Igbo reasonings for value consciousness.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- System Architecture -->
+      <section class="arch-section">
+        <h2 class="section-title">System Architecture</h2>
+        <div class="arch-grid">
+          <div class="arch-card">
+            <h3>Task A: Review Simulator Pipeline</h3>
+            <div class="pipeline-flow">
+              <div class="flow-node">User ID + Item Details</div>
+              <div class="flow-arrow">⬇️</div>
+              <div class="flow-node">Persona Cache check (Disk Lookup)</div>
+              <div class="flow-arrow">⬇️</div>
+              <div class="flow-node">Agent 1: Persona Analyst Dossier Builder</div>
+              <div class="flow-arrow">⬇️</div>
+              <div class="flow-node">FAISS User RAG Retrieval (similar historical reviews)</div>
+              <div class="flow-arrow">⬇️</div>
+              <div class="flow-node">Agent 2: Review Generator (Flash)</div>
+              <div class="flow-arrow">⬇️</div>
+              <div class="flow-node">Output Simulated Review, Title, & Star Rating</div>
+            </div>
+          </div>
+          <div class="arch-card">
+            <h3>Task B: Recommendation Pipeline</h3>
+            <div class="pipeline-flow">
+              <div class="flow-node">User Input Profile (Elicitation / ID)</div>
+              <div class="flow-arrow">⬇️</div>
+              <div class="flow-node">User Type Detection (Cold-start / 1-shot / History)</div>
+              <div class="flow-arrow">⬇️</div>
+              <div class="flow-node">Positive-Framed FAISS Index Search (112k items)</div>
+              <div class="flow-arrow">⬇️</div>
+              <div class="flow-node">50/50 Semantic & Popularity Blend Scoring</div>
+              <div class="flow-arrow">⬇️</div>
+              <div class="flow-node">Shuffled Candidate LLM Reranker (Retry + Hallucination Fix)</div>
+              <div class="flow-arrow">⬇️</div>
+              <div class="flow-node">Output top 5 Nigerian-Contextualized Explanations</div>
+            </div>
+          </div>
+        </div>
+        <div class="shared-pool-card" style="margin-top: 2rem;">
+          <h3>Shared Core Infrastructure: Multi-Provider LLM Pool</h3>
+          <p>Gemini 2.0 Flash ➡️ Gemini 1.5 Flash ➡️ Cerebras DeepSeek ➡️ Groq Llama-3.3-70b</p>
+          <div class="pool-features">
+            <span>🔄 Auto-rotation on rate limits (429 failovers)</span>
+            <span>⚡ Real-time latency tracking and stats monitoring</span>
+            <span>📦 Amazon Reviews 2023 Dataset (701,528 reviews)</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Team Section -->
+      <section class="team-section">
+        <h2 class="section-title">Built By — Team Drizzy x Metro</h2>
+        <div class="team-grid">
+          <div class="team-card">
+            <div class="team-avatar">OT</div>
+            <div class="team-info">
+              <div class="team-nickname">Drizzy</div>
+              <h4>Agoro Oluwatimilehin</h4>
+              <div class="team-role">Machine Learning Engineer</div>
+              <div class="team-task">Lead Developer, Task B Recommender Pipeline</div>
+            </div>
+          </div>
+          <div class="team-card">
+            <div class="team-avatar">AT</div>
+            <div class="team-info">
+              <div class="team-nickname">Metro</div>
+              <h4>Ajiboye Toluwalase</h4>
+              <div class="team-role">Machine Learning Engineer</div>
+              <div class="team-task">Lead Developer, Task A Modeling & Evaluation</div>
+            </div>
+          </div>
+        </div>
+        <p class="team-tagline">DSN x BCT Hackathon 3.0 — May 2026</p>
+      </section>
+    </div>
+
+    <!-- =================================================================
          TAB 1: PRODUCT REVIEW SIMULATOR (TASK A)
          ================================================================= -->
-    <div id="tab-simulator" class="tab-content active">
+    <div id="tab-simulator" class="tab-content">
+
       
       <!-- Input Card -->
       <div class="card">
@@ -1027,20 +1477,18 @@
        JAVASCRIPT DYNAMIC ROUTING & INTERACTIVE STATES
        ══════════════════════════════════════════════════════════════════ */
 
-    // Tab switcher
     function switchTab(tab) {
       // Toggle nav buttons
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => 
-        (tab === 'simulator' && btn.innerText.includes('Review')) ||
-        (tab === 'recommender' && btn.innerText.includes('Recommend'))
-      );
-      if (activeBtn) activeBtn.classList.add('active');
-
-      // Toggle content panes
       document.querySelectorAll('.tab-content').forEach(pane => pane.classList.remove('active'));
-      document.getElementById(`tab-${tab}`).classList.add('active');
+      
+      const contentPane = document.getElementById(`tab-${tab}`);
+      const navBtn = document.getElementById(`btn-tab-${tab}`);
+      
+      if (contentPane) contentPane.classList.add('active');
+      if (navBtn) navBtn.classList.add('active');
     }
+
 
     // Toggle elicitation questions if User ID is specified
     function toggleElicitationQuestions() {
@@ -1200,30 +1648,7 @@
             <div class="rec-rank">${item.rank}</div>
             <div class="rec-info">
               <div class="rec-title">${item.title}</div>
-              <div class="rec-explanation">${item.explanation}</div>
-            </div>
-            <div class="rec-stats">
-              <div class="rec-rating">
-                <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                ${item.avg_rating.toFixed(1)}
-              </div>
-              <div class="rec-count">${item.review_count} reviews</div>
-            </div>
-          `;
-
-          listContainer.appendChild(card);
-        });
-
-        // Toggle visibility
-        loader.style.display = 'none';
-        resultContainer.style.display = 'flex';
-      } catch (err) {
-        loader.style.display = 'none';
-        showRecommenderError(err.message);
-      }
-    }
-
-    function showRecommenderError(msg) {
+       function showRecommenderError(msg) {
       document.getElementById('b-empty').style.display = 'none';
       document.getElementById('b-loader').style.display = 'none';
       document.getElementById('b-result').style.display = 'none';
@@ -1249,25 +1674,41 @@
         document.getElementById('telemetry-total').innerText = data.total_requests;
         document.getElementById('telemetry-active-name').innerText = `Active: ${data.active_provider.replace('-versatile', '')}`;
         
+        const total = data.total_requests || 0;
         data.providers.forEach(p => {
-          let reqSpan, dot;
+          let reqSpan, dot, bar, latSpan;
           if (p.provider === 'gemini-2.0-flash') {
             reqSpan = document.getElementById('req-gemini-20');
             dot = document.getElementById('dot-gemini-20');
+            bar = document.getElementById('bar-gemini-20');
+            latSpan = document.getElementById('lat-gemini-20');
           } else if (p.provider === 'gemini-1.5-flash') {
             reqSpan = document.getElementById('req-gemini-15');
             dot = document.getElementById('dot-gemini-15');
+            bar = document.getElementById('bar-gemini-15');
+            latSpan = document.getElementById('lat-gemini-15');
           } else if (p.provider === 'deepseek-r1-distill-llama-70b') {
             reqSpan = document.getElementById('req-cerebras-deepseek');
             dot = document.getElementById('dot-cerebras-deepseek');
+            bar = document.getElementById('bar-cerebras-deepseek');
+            latSpan = document.getElementById('lat-cerebras-deepseek');
           } else if (p.provider === 'groq-llama-3.3-70b') {
             reqSpan = document.getElementById('req-groq-llama');
             dot = document.getElementById('dot-groq-llama');
+            bar = document.getElementById('bar-groq-llama');
+            latSpan = document.getElementById('lat-groq-llama');
           }
-
           
           if (reqSpan && dot) {
             reqSpan.innerText = p.requests_made;
+            if (latSpan) {
+              latSpan.innerText = p.avg_latency_s > 0 ? p.avg_latency_s.toFixed(1) : "0.0";
+            }
+            if (bar) {
+              let pct = total > 0 ? (p.requests_made / total) * 100 : 0;
+              bar.style.width = `${pct}%`;
+            }
+            
             dot.className = 'status-dot';
             if (p.is_exhausted) {
               dot.classList.add('exhausted');
@@ -1282,6 +1723,7 @@
         console.error("Telemetry failed:", err);
       }
     }
+
     
     // Initial fetch and poll every 30s
     updateTelemetry();
@@ -1316,36 +1758,65 @@
 
     
     <div class="telemetry-item">
-      <div class="telemetry-item-name">
-        <div class="status-dot" id="dot-gemini-20"></div>
-        <span>Gemini 2.0 (Primary)</span>
+      <div class="telemetry-row">
+        <div class="telemetry-item-name">
+          <div class="status-dot" id="dot-gemini-20"></div>
+          <span>Gemini 2.0 (Primary)</span>
+        </div>
+        <div class="telemetry-item-metrics">
+          <span id="req-gemini-20">0</span> req | <span id="lat-gemini-20">0.0</span>s avg
+        </div>
       </div>
-      <div class="telemetry-reqs"><span id="req-gemini-20">0</span> <span class="telemetry-muted">req</span></div>
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="bar-gemini-20" style="width: 0%;"></div>
+      </div>
     </div>
     
     <div class="telemetry-item">
-      <div class="telemetry-item-name">
-        <div class="status-dot" id="dot-gemini-15"></div>
-        <span>Gemini 1.5 (Secondary)</span>
+      <div class="telemetry-row">
+        <div class="telemetry-item-name">
+          <div class="status-dot" id="dot-gemini-15"></div>
+          <span>Gemini 1.5 (Secondary)</span>
+        </div>
+        <div class="telemetry-item-metrics">
+          <span id="req-gemini-15">0</span> req | <span id="lat-gemini-15">0.0</span>s avg
+        </div>
       </div>
-      <div class="telemetry-reqs"><span id="req-gemini-15">0</span> <span class="telemetry-muted">req</span></div>
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="bar-gemini-15" style="width: 0%;"></div>
+      </div>
     </div>
     
     <div class="telemetry-item">
-      <div class="telemetry-item-name">
-        <div class="status-dot" id="dot-cerebras-deepseek"></div>
-        <span>Cerebras DeepSeek (Fallback)</span>
+      <div class="telemetry-row">
+        <div class="telemetry-item-name">
+          <div class="status-dot" id="dot-cerebras-deepseek"></div>
+          <span>Cerebras DeepSeek</span>
+        </div>
+        <div class="telemetry-item-metrics">
+          <span id="req-cerebras-deepseek">0</span> req | <span id="lat-cerebras-deepseek">0.0</span>s avg
+        </div>
       </div>
-      <div class="telemetry-reqs"><span id="req-cerebras-deepseek">0</span> <span class="telemetry-muted">req</span></div>
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="bar-cerebras-deepseek" style="width: 0%;"></div>
+      </div>
     </div>
     
     <div class="telemetry-item">
-      <div class="telemetry-item-name">
-        <div class="status-dot" id="dot-groq-llama"></div>
-        <span>Groq Llama (Fallback)</span>
+      <div class="telemetry-row">
+        <div class="telemetry-item-name">
+          <div class="status-dot" id="dot-groq-llama"></div>
+          <span>Groq Llama (Fallback)</span>
+        </div>
+        <div class="telemetry-item-metrics">
+          <span id="req-groq-llama">0</span> req | <span id="lat-groq-llama">0.0</span>s avg
+        </div>
       </div>
-      <div class="telemetry-reqs"><span id="req-groq-llama">0</span> <span class="telemetry-muted">req</span></div>
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="bar-groq-llama" style="width: 0%;"></div>
+      </div>
     </div>
+
 
     
     <div style="display:flex; justify-content:space-between; margin-top:2px; font-size:0.75rem; color:var(--text-muted); border-top:1px solid rgba(255, 255, 255, 0.05); padding-top:0.4rem;">
