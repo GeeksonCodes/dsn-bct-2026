@@ -363,7 +363,9 @@ class SimulateRequest(BaseModel):
     item_asin: str
     item_title: str
     item_description: Optional[str] = ""
+    language: str = "english"
     nigerian_mode: bool = True
+    num_variations: int = 1
 
 
 class SimulateResponse(BaseModel):
@@ -373,6 +375,19 @@ class SimulateResponse(BaseModel):
     persona_type: str
     mode: str
     user_id: Optional[str] = None
+
+
+# ══════════════════════════════════════════════════════════════════
+#  LANGUAGE PROMPTS  — Nigerian contextualisation
+# ══════════════════════════════════════════════════════════════════
+
+LANGUAGE_PROMPTS = {
+    "pidgin": "Nigerian Pidgin — weave in naturally: 'e good o', 'I no go lie', 'wahala', 'sha'",
+    "yoruba": "Yoruba-English Mix — 'Ẹ káàbọ̀', 'omo', 'my people', occasional Yoruba words like 'o dára gan-an'",
+    "hausa": "Hausa-English Mix — 'Sannu', 'wallahi', 'alhamdulillah', respectful Hausa-influenced tone",
+    "igbo": "Igbo-English Mix — 'Nnọọ', 'nna', 'chai', direct assertive Igbo-influenced tone",
+    "english": "Nigerian English — practical, value-conscious, communal Nigerian English framing.",
+}
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -1075,7 +1090,8 @@ def run_agent2_with_rag(
     item_category: str,
     nigerian_language: Optional[str] = None,
     top_k: int = 4,
-    item_card: Optional[ItemCard] = None
+    item_card: Optional[ItemCard] = None,
+    temperature: float = 0.6
 ) -> SimulatedReview:
     """Generates the review text matching a specific user dossier and rating distribution."""
     # 1. RAG retrieval
@@ -1112,15 +1128,9 @@ Description: {str(item_description)[:400]}"""
     upper_bound = min(5, round(user_mean + (2 * user_std)))
 
     # Cultural language instructions
-    lang_instructions = {
-        'pidgin': "Nigerian Pidgin — weave in naturally: 'e good o', 'I no go lie', 'wahala', 'sha'",
-        'yoruba_influenced': "Yoruba-influenced English — 'omo', 'my people', occasional Yoruba words",
-        'igbo_influenced': "Igbo-influenced English — 'nna', 'chai', direct assertive tone",
-        'hausa_influenced': "Hausa-influenced English — 'wallahi', 'alhamdulillah', respectful tone",
-    }
     lang_line = ""
-    if nigerian_language and nigerian_language in lang_instructions:
-        lang_line = f"\nLANGUAGE STYLE: {lang_instructions[nigerian_language]}\n"
+    if nigerian_language and nigerian_language in LANGUAGE_PROMPTS:
+        lang_line = f"\nLANGUAGE STYLE: {LANGUAGE_PROMPTS[nigerian_language]}\n"
 
     # Stage 1: Estimating Rating with Front-Loaded Reasoning
     committed_rating = round(user_mean)
@@ -1210,49 +1220,88 @@ MATCH THIS TARGET STRUCTURAL FORMAT:
 {output_example}
 """
 
+    # Attempt parsing with multiple fallback layers
+    sim_review = None
     for attempt in range(2):
         try:
-            raw = generate_with_retry(review_prompt, temperature=0.6, max_tokens=800)
-            if raw:
-                raw = re.sub(r'^```json\s*', '', raw, flags=re.MULTILINE)
-                raw = re.sub(r'^```\s*',     '', raw, flags=re.MULTILINE)
-                raw = re.sub(r'\s*```$',     '', raw, flags=re.MULTILINE)
-                raw = raw.strip()
+            raw = generate_with_retry(review_prompt, temperature=temperature, max_tokens=800)
+            if not raw:
+                continue
+                
+            logger.debug(f"Raw Agent 2 output (attempt {attempt+1}): {raw}")
+            
+            # Layer 1: Clean JSON extraction
+            json_str = raw.strip()
+            json_str = re.sub(r'^```json\s*', '', json_str, flags=re.MULTILINE)
+            json_str = re.sub(r'^```\s*',     '', json_str, flags=re.MULTILINE)
+            json_str = re.sub(r'\s*```$',     '', json_str, flags=re.MULTILINE)
+            
+            # Try to isolate the JSON block if there's conversational filler
+            brace_count = 0
+            start_pos = -1
+            end_pos = -1
+            for i, char in enumerate(json_str):
+                if char == '{':
+                    if brace_count == 0: start_pos = i
+                    brace_count += 1
+                elif char == '}':
+                    brace_count -= 1
+                    if brace_count == 0:
+                        end_pos = i + 1
+                        break
+            
+            if start_pos != -1 and end_pos != -1:
+                json_str = json_str[start_pos:end_pos]
 
-                brace_count = 0
-                end_pos = 0
-                for i, char in enumerate(raw):
-                    if char == '{':
-                        brace_count += 1
-                    elif char == '}':
-                        brace_count -= 1
-                        if brace_count == 0:
-                            end_pos = i + 1
-                            break
-                if end_pos > 0:
-                    raw = raw[:end_pos]
-
-                data = json.loads(raw)
+            try:
+                data = json.loads(json_str)
+                # Force inject the required fields
                 data['user_id'] = dossier.user_id
                 data['asin'] = item_asin
                 data['language'] = nigerian_language or 'english'
                 data['rating'] = committed_rating
                 data['reasoning'] = committed_reason
-
-                return SimulatedReview(**data)
+                
+                sim_review = SimulatedReview(**data)
+                break
+            except Exception as json_err:
+                logger.warning(f"JSON parse failed on attempt {attempt+1}, trying regex extraction: {json_err}")
+                
+                # Layer 2: Regex Field Extraction (fallback if JSON is mangled)
+                title_match  = re.search(r'"(?:review_)?title":\s*"([^"]+)"', raw)
+                text_match   = re.search(r'"(?:review_)?(?:text|review)":\s*"([^"]+)"', raw)
+                
+                if title_match and text_match:
+                    sim_review = SimulatedReview(
+                        user_id=dossier.user_id,
+                        asin=item_asin,
+                        reasoning=committed_reason,
+                        rating=committed_rating,
+                        title=title_match.group(1),
+                        review=text_match.group(1),
+                        language=nigerian_language or 'english'
+                    )
+                    break
+                
+                logger.error(f"All parsing layers failed for raw output on attempt {attempt+1}: {raw}")
+                
         except Exception as e:
-            logger.warning(f"Agent 2 review layout failed on attempt {attempt+1}: {e}")
+            logger.error(f"Agent 2 attempt {attempt+1} encountered an error: {e}")
 
-    # Ultimate recoverability fallback
-    return SimulatedReview(
-        user_id=dossier.user_id,
-        asin=item_asin,
-        reasoning=committed_reason,
-        rating=committed_rating,
-        title=f"Okay: {item_title[:30]}",
-        review="E good o! I bought this recently and it works very well. Quite solid value for money, I would advise you try it.",
-        language=nigerian_language or 'english'
-    )
+    # Final Fallback — Ensure no "Okay: skincare" placeholders
+    if not sim_review:
+        logger.error("Returning hard fallback review due to total parsing failure.")
+        sim_review = SimulatedReview(
+            user_id=dossier.user_id,
+            asin=item_asin,
+            reasoning=committed_reason,
+            rating=committed_rating,
+            title=f"My thoughts on {item_title[:30]}",
+            review="I buy am and e nice gan-an. Highly recommend this product, e work well for me.",
+            language=nigerian_language or 'english'
+        )
+
+    return sim_review
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -1313,7 +1362,7 @@ def stats():
 
 
 
-@app.post("/simulate", response_model=SimulateResponse)
+@app.post("/simulate")
 def simulate(req: SimulateRequest):
     """
     Simulates a review for a user on a given item.
@@ -1328,10 +1377,11 @@ def simulate(req: SimulateRequest):
     title = req.item_title
     description = req.item_description or ""
     nigerian_mode = req.nigerian_mode
+    language = req.language
+    num_variations = max(1, min(3, req.num_variations))
 
     category = determine_category(asin, title)
-    nigerian_language = "pidgin" if nigerian_mode else None
-
+    
     # Check if user exists in rich_df review history
     user_exists = False
     user_reviews = pd.DataFrame()
@@ -1399,23 +1449,32 @@ def simulate(req: SimulateRequest):
     )
 
     # ── AGENT 2 WITH RAG SIMULATION ──────────────────────────────
-    logger.info("Running Agent 2 generator with RAG and profile constraints")
-    review = run_agent2_with_rag(
-        dossier=dossier,
-        item_asin=asin,
-        item_title=title,
-        item_description=description,
-        item_category=category,
-        nigerian_language=nigerian_language,
-        top_k=4,
-        item_card=item_card
-    )
+    logger.info(f"Running Agent 2 generator for {num_variations} variations")
+    
+    variations = []
+    # Vary temperature for diversity in variations
+    temps = [0.4, 0.7, 1.0] if num_variations > 1 else [0.6]
+    
+    for i in range(num_variations):
+        review = run_agent2_with_rag(
+            dossier=dossier,
+            item_asin=asin,
+            item_title=title,
+            item_description=description,
+            item_category=category,
+            nigerian_language=language if nigerian_mode else None,
+            top_k=4,
+            item_card=item_card,
+            temperature=temps[i]
+        )
+        
+        variations.append(SimulateResponse(
+            rating=review.rating,
+            review_title=review.title,
+            review_text=review.review,
+            persona_type=dossier.rating_behaviour.tendency.value.capitalize(),
+            mode=mode,
+            user_id=user_id if user_id else "cold_start"
+        ))
 
-    return SimulateResponse(
-        rating=review.rating,
-        review_title=review.title,
-        review_text=review.review,
-        persona_type=dossier.rating_behaviour.tendency.value.capitalize(),
-        mode=mode,
-        user_id=user_id if user_id else "cold_start"
-    )
+    return variations[0] if num_variations == 1 else variations
