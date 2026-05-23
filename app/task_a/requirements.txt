@@ -1,0 +1,24 @@
+# Task A — User Modeling Dependencies
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.0.0
+
+# Embeddings — all-MiniLM-L6-v2 (384d, CPU only)
+sentence-transformers>=2.2.0
+torch>=2.0.0
+
+# Vector search
+faiss-cpu>=1.7.4
+
+# LLM — Gemini (new SDK)
+google-genai>=1.0.0
+
+# Data
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Utilities
+python-dotenv>=1.0.0
+groq>=0.9.0
+cerebras-cloud-sdk>=1.0.0
+

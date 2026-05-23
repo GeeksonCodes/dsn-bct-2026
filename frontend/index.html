@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DSN x BCT LLM Agent Suite</title>
+  
+  <!-- Premium Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ══════════════════════════════════════════════════════════════════
+       DESIGN SYSTEM & CORE STYLES (Royal Blue, Premium Gold, Glassmorphism)
+       ══════════════════════════════════════════════════════════════════ */
+    :root {
+      --bg-dark: #070e1e;
+      --bg-card: rgba(14, 26, 48, 0.7);
+      --bg-card-hover: rgba(22, 38, 68, 0.85);
+      --primary: #1e3c72;
+      --accent-gold: #f39c12;
+      --accent-gold-glow: rgba(243, 156, 18, 0.35);
+      --text-main: #f5f6fa;
+      --text-muted: #a4b0be;
+      --border-color: rgba(243, 156, 18, 0.15);
+      --border-color-active: rgba(243, 156, 18, 0.45);
+      --success: #2ecc71;
+      --error: #e74c3c;
+      --font-outfit: 'Outfit', sans-serif;
+      --font-jakarta: 'Plus Jakarta Sans', sans-serif;
+      --shadow-premium: 0 12px 40px 0 rgba(0, 0, 0, 0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--accent-gold) var(--bg-dark);
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(30, 60, 114, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(243, 156, 18, 0.08) 0px, transparent 50%);
+      font-family: var(--font-jakarta);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* ── NIGERIAN FLAG RIBBON ── */
+    .country-accent {
+      height: 6px;
+      width: 100%;
+      background: linear-gradient(to right, #008751 0%, #008751 33.3%, #ffffff 33.3%, #ffffff 66.6%, #008751 66.6%, #008751 100%);
+      box-shadow: 0 2px 10px rgba(0, 135, 81, 0.3);
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: rgba(7, 14, 30, 0.85);
+      backdrop-filter: blur(10px);
+      padding: 1.2rem 2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, var(--primary), var(--accent-gold));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: white;
+      font-family: var(--font-outfit);
+      font-size: 1.4rem;
+      box-shadow: 0 4px 15px rgba(243, 156, 18, 0.2);
+    }
+
+    .brand-name h1 {
+      font-family: var(--font-outfit);
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(to right, #ffffff, var(--accent-gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-name p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .nav-tabs {
+      display: flex;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 4px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.6rem 1.4rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      font-family: var(--font-outfit);
+      cursor: pointer;
+      border-radius: 10px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .tab-btn:hover {
+      color: white;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, var(--primary), rgba(30, 60, 114, 0.6));
+      color: white;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
+    }
+
+    /* ── MAIN CONTAINER ── */
+    main {
+      flex: 1;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .tab-content.active {
+      display: grid;
+      grid-template-columns: 1.1fr 1.9fr;
+      gap: 2rem;
+    }
+
+    /* ── GLASS CARD ── */
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      padding: 2rem;
+      box-shadow: var(--shadow-premium);
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .card:hover {
+      border-color: var(--border-color-active);
+      background: var(--bg-card-hover);
+    }
+
+    .card-title {
+      font-family: var(--font-outfit);
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 0.8rem;
+    }
+
+    .card-title svg {
+      width: 24px;
+      height: 24px;
+      fill: var(--accent-gold);
+    }
+
+    /* ── FORMS & INPUTS ── */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    input[type="text"], textarea, select {
+      width: 100%;
+      background: rgba(7, 14, 30, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 0.8rem 1rem;
+      color: white;
+      font-family: var(--font-jakarta);
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+
+    input[type="text"]:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 10px var(--accent-gold-glow);
+      background: rgba(7, 14, 30, 0.9);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    /* ── SLICK TOGGLE SWITCH ── */
+    .toggle-group {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.02);
+      padding: 0.8rem 1rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .toggle-label {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .toggle-label span:first-child {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: white;
+    }
+
+    .toggle-label span:last-child {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 26px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.1);
+      transition: .4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--accent-gold);
+    }
+
+    input:focus + .slider {
+      box-shadow: 0 0 1px var(--accent-gold);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(22px);
+    }
+
+    /* ── ACTION BUTTONS ── */
+    .btn-submit {
+      background: linear-gradient(135deg, var(--accent-gold), #d35400);
+      border: none;
+      color: white;
+      padding: 1rem;
+      border-radius: 12px;
+      font-weight: 700;
+      font-family: var(--font-outfit);
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(243, 156, 18, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(243, 156, 18, 0.4);
+    }
+
+    .btn-submit:active {
+      transform: translateY(0);
+    }
+
+    /* ── DISPLAY / OUTPUT WORKPLACE ── */
+    .output-workspace {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      justify-content: center;
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+      gap: 1rem;
+    }
+
+    .empty-state svg {
+      width: 80px;
+      height: 80px;
+      opacity: 0.2;
+      animation: pulse 3s infinite ease-in-out;
+    }
+
+    /* ── RATING CONTAINER (Task A) ── */
+    .result-container {
+      display: none;
+      flex-direction: column;
+      gap: 1.5rem;
+      animation: slideUp 0.5s ease;
+    }
+
+    .rating-header {
+      background: linear-gradient(135deg, rgba(30, 60, 114, 0.4), rgba(7, 14, 30, 0.6));
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .badge-pill {
+      background: var(--accent-gold-glow);
+      border: 1px solid var(--accent-gold);
+      color: var(--accent-gold);
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      font-family: var(--font-outfit);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .rating-stars {
+      display: flex;
+      gap: 4px;
+    }
+
+    .star {
+      width: 26px;
+      height: 26px;
+      fill: #2f3542;
+      transition: fill 0.3s ease;
+    }
+
+    .star.active {
+      fill: var(--accent-gold);
+      filter: drop-shadow(0 0 6px rgba(243, 156, 18, 0.8));
+    }
+
+    .review-body {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 2rem;
+      position: relative;
+    }
+
+    .review-quote {
+      position: absolute;
+      top: 10px;
+      left: 15px;
+      font-size: 5rem;
+      font-family: Georgia, serif;
+      color: rgba(243, 156, 18, 0.07);
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .review-heading {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 1rem;
+      font-family: var(--font-outfit);
+    }
+
+    .review-text-content {
+      color: var(--text-main);
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+
+    /* ── RECOMMENDATION GRID (Task B) ── */
+    .recs-container {
+      display: none;
+      flex-direction: column;
+      gap: 1.5rem;
+      animation: slideUp 0.5s ease;
+    }
+
+    .recs-reasoning {
+      background: linear-gradient(135deg, rgba(30, 60, 114, 0.3), rgba(7, 14, 30, 0.5));
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.2rem 1.5rem;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      border-left: 5px solid var(--accent-gold);
+    }
+
+    .recs-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .rec-card {
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 1.2rem 1.5rem;
+      display: grid;
+      grid-template-columns: 50px 1fr auto;
+      align-items: center;
+      gap: 1.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .rec-card:hover {
+      background: rgba(255, 255, 255, 0.03);
+      border-color: var(--border-color);
+      transform: translateX(5px);
+    }
+
+    .rec-rank {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent-gold), #d35400);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-outfit);
+      font-weight: 800;
+      color: white;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 10px rgba(243, 156, 18, 0.3);
+    }
+
+    .rec-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .rec-title {
+      font-weight: 700;
+      color: white;
+      font-size: 0.95rem;
+      font-family: var(--font-outfit);
+    }
+
+    .rec-explanation {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-top: 4px;
+    }
+
+    .rec-stats {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+
+    .rec-rating {
+      color: var(--accent-gold);
+      font-weight: 700;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .rec-rating svg {
+      width: 14px;
+      height: 14px;
+      fill: var(--accent-gold);
+    }
+
+    .rec-count {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* ── LOADING SPINNER ── */
+    .loader {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.2rem;
+      padding: 4rem 2rem;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(243, 156, 18, 0.1);
+      border-top: 4px solid var(--accent-gold);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      box-shadow: 0 0 15px rgba(243, 156, 18, 0.2);
+    }
+
+    /* ── ERROR MESSAGE ── */
+    .error-box {
+      display: none;
+      background: rgba(231, 76, 60, 0.1);
+      border: 1px solid var(--error);
+      color: #ff6b6b;
+      padding: 1rem;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      align-items: center;
+      gap: 0.8rem;
+      animation: shake 0.5s ease;
+    }
+
+    .error-box svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--error);
+      flex-shrink: 0;
+    }
+
+    /* ── RETURNING USER NOTICE ── */
+    .returning-user-notice {
+      background: rgba(30, 60, 114, 0.15);
+      border: 1px solid var(--primary);
+      border-radius: 12px;
+      padding: 0.8rem 1rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+      display: none;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 0.2; }
+      50% { transform: scale(1.05); opacity: 0.35; }
+      100% { transform: scale(1); opacity: 0.2; }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+      20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1024px) {
+      .tab-content.active {
+        grid-template-columns: 1fr;
+      }
+      
+      header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+      }
+    }
+
+    /* ── LIVE TELEMETRY / HEALTH PANEL ── */
+    .telemetry-panel {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(14, 26, 48, 0.95);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.2rem;
+      width: 320px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      z-index: 1000;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      font-family: var(--font-jakarta);
+    }
+    
+    .telemetry-panel.collapsed {
+      height: 44px;
+      width: 200px;
+      overflow: hidden;
+      padding: 0.6rem 1rem;
+      gap: 0;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+    }
+    
+    .telemetry-panel.collapsed .telemetry-item,
+    .telemetry-panel.collapsed div[style*="justify-content:space-between"] {
+      opacity: 0;
+      pointer-events: none;
+      display: none !important;
+    }
+    
+    .telemetry-panel.collapsed .telemetry-header {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    
+    .telemetry-toggle-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s ease, color 0.2s ease;
+    }
+    
+    .telemetry-toggle-btn:hover {
+      color: white;
+    }
+    
+    .telemetry-panel.collapsed .telemetry-toggle-btn {
+      transform: rotate(180deg);
+    }
+
+    
+    .telemetry-header {
+      font-family: var(--font-outfit);
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 0.5rem;
+    }
+    
+    .telemetry-header .live-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--success);
+      border-radius: 50%;
+      animation: blink 2s infinite ease-in-out;
+    }
+    
+    .telemetry-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+    }
+    
+    .telemetry-item-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #57606f;
+    }
+    
+    .status-dot.active {
+      background-color: var(--success);
+      box-shadow: 0 0 8px var(--success);
+    }
+    
+    .status-dot.standby {
+      background-color: var(--accent-gold);
+      box-shadow: 0 0 8px var(--accent-gold);
+    }
+    
+    .status-dot.exhausted {
+      background-color: var(--error);
+      box-shadow: 0 0 8px var(--error);
+    }
+    
+    .telemetry-reqs {
+      font-family: var(--font-outfit);
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    
+    .telemetry-muted {
+      color: var(--text-muted);
+      font-size: 0.7rem;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Accent -->
+  <div class="country-accent"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">🇳🇬</div>
+      <div class="brand-name">
+        <h1>DSN x BCT LLM Agent</h1>
+        <p>User Behaviour & Recommender Engine</p>
+      </div>
+    </div>
+    
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('simulator')">Review Simulator (Task A)</button>
+      <button class="tab-btn" onclick="switchTab('recommender')">Product Recommender (Task B)</button>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main>
+    
+    <!-- =================================================================
+         TAB 1: PRODUCT REVIEW SIMULATOR (TASK A)
+         ================================================================= -->
+    <div id="tab-simulator" class="tab-content active">
+      
+      <!-- Input Card -->
+      <div class="card">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+          Review Parameters
+        </div>
+        
+        <div class="form-group">
+          <label for="a-user-id">User ID (Optional)</label>
+          <input type="text" id="a-user-id" placeholder="e.g. AHBWH2LBU3NFLD46GKJKIBAHKXEQ">
+        </div>
+        
+        <div class="form-group">
+          <label for="a-item-asin">Item ASIN</label>
+          <input type="text" id="a-item-asin" value="B00YQ6X8EO">
+        </div>
+
+        <div class="form-group">
+          <label for="a-item-title">Item Name</label>
+          <input type="text" id="a-item-title" value="Lavender Body Lotion">
+        </div>
+
+        <div class="form-group">
+          <label for="a-item-desc">Item Description</label>
+          <textarea id="a-item-desc" placeholder="A lightweight daily moisturiser with calming lavender scent.">A lightweight daily moisturiser with calming lavender scent.</textarea>
+        </div>
+
+        <!-- Nigerian Toggle -->
+        <div class="toggle-group">
+          <div class="toggle-label">
+            <span>Nigerian Pidgin Mode</span>
+            <span>Condition generation with local flavor</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="a-nigerian-mode" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <button class="btn-submit" onclick="runSimulation()">
+          Simulate Review
+        </button>
+      </div>
+
+      <!-- Output Card -->
+      <div class="card output-workspace">
+        <!-- Empty State -->
+        <div id="a-empty" class="empty-state">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          <p>Fill out the parameters and click "Simulate Review" to generate a review in the user's authentic voice.</p>
+        </div>
+
+        <!-- Loader -->
+        <div id="a-loader" class="loader">
+          <div class="spinner"></div>
+          <p>Analysing history & generating review...</p>
+        </div>
+
+        <!-- Error Box -->
+        <div id="a-error" class="error-box">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          <span id="a-error-msg">Failed to connect to simulation engine.</span>
+        </div>
+
+        <!-- Result Content -->
+        <div id="a-result" class="result-container">
+          <div class="rating-header">
+            <div>
+              <p style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight:700;">Simulated Rating</p>
+              <div class="rating-stars" style="margin-top: 5px;">
+                <svg class="star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+              </div>
+            </div>
+            
+            <div style="text-align: right; display:flex; flex-direction:column; gap:5px; align-items:flex-end;">
+              <span class="badge-pill" id="a-persona-badge">Balanced</span>
+              <span id="a-mode-badge" style="font-size: 0.75rem; color: var(--text-muted);">history_based</span>
+            </div>
+          </div>
+
+          <div class="review-body">
+            <div class="review-quote">“</div>
+            <div class="review-heading" id="a-review-title">"Good product o!"</div>
+            <div class="review-text-content" id="a-review-text">
+              I buy am and e nice gan-an. Highly recommend!
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- =================================================================
+         TAB 2: PRODUCT RECOMMENDER (TASK B)
+         ================================================================= -->
+    <div id="tab-recommender" class="tab-content">
+      
+      <!-- Input Card -->
+      <div class="card">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+          Recommendation Parameters
+        </div>
+
+        <div class="form-group">
+          <label for="b-user-id">User ID (Optional)</label>
+          <input type="text" id="b-user-id" placeholder="e.g. AGKHLEW2SOWHNMFQIJGBECAF7INQ" oninput="toggleElicitationQuestions()">
+        </div>
+
+        <div class="returning-user-notice" id="b-returning-notice">
+          ℹ️ **Returning User detected:** We will automatically retrieve products matching their historical review profile. Elicitation questions will be bypassed.
+        </div>
+
+        <!-- 3-Question Elicitation (Cold Start fields) -->
+        <div id="b-elicitation-container" style="display:flex; flex-direction:column; gap:1.2rem;">
+          <div class="form-group">
+            <label for="b-product-type">Q1: What product type are you looking for?</label>
+            <select id="b-product-type">
+              <option value="skincare">Skincare (Body Lotions, Serums)</option>
+              <option value="haircare">Haircare (Shampoos, Oils)</option>
+              <option value="cosmetics">Cosmetics (Lipstick, Makeup)</option>
+              <option value="perfumes">Fragrances & Perfumes</option>
+              <option value="videogames">Video Games & Software</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="b-priority">Q2: What matters most when buying?</label>
+            <select id="b-priority">
+              <option value="natural ingredients">Natural Ingredients (Organic, gentle)</option>
+              <option value="affordable value">Affordability (Best price, pocket-friendly)</option>
+              <option value="high efficacy">Highly Effective (Strong results, quick action)</option>
+              <option value="pleasant scent">Pleasant Scents (Fragrances, lavender)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="b-avoid">Q3: Any ingredients or themes you avoid?</label>
+            <input type="text" id="b-avoid" placeholder="e.g. alcohol, chemical parabens">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="b-language">Preferred Response Language</label>
+          <select id="b-language">
+            <option value="pidgin">Nigerian Pidgin</option>
+            <option value="yoruba">Yoruba-English Mix</option>
+            <option value="hausa">Hausa-English Mix</option>
+            <option value="igbo">Igbo-English Mix</option>
+            <option value="english">Nigerian English</option>
+          </select>
+        </div>
+
+        <button class="btn-submit" onclick="runRecommendation()">
+          Get Recommendations
+        </button>
+      </div>
+
+      <!-- Output Card -->
+      <div class="card output-workspace">
+        <!-- Empty State -->
+        <div id="b-empty" class="empty-state">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          <p>Fill out the preferences or input a User ID and click "Get Recommendations" to receive tailored recommendations.</p>
+        </div>
+
+        <!-- Loader -->
+        <div id="b-loader" class="loader">
+          <div class="spinner"></div>
+          <p>Retrieving & reranking items...</p>
+        </div>
+
+        <!-- Error Box -->
+        <div id="b-error" class="error-box">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          <span id="b-error-msg">Failed to connect to recommendation engine.</span>
+        </div>
+
+        <!-- Result Content -->
+        <div id="b-result" class="recs-container">
+          <div class="recs-reasoning" id="b-reasoning">
+            "Reranking justification goes here o..."
+          </div>
+
+          <div class="recs-grid" id="b-recs-list">
+            <!-- Recommendation items generated dynamically -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    /* ══════════════════════════════════════════════════════════════════
+       JAVASCRIPT DYNAMIC ROUTING & INTERACTIVE STATES
+       ══════════════════════════════════════════════════════════════════ */
+
+    // Tab switcher
+    function switchTab(tab) {
+      // Toggle nav buttons
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => 
+        (tab === 'simulator' && btn.innerText.includes('Review')) ||
+        (tab === 'recommender' && btn.innerText.includes('Recommend'))
+      );
+      if (activeBtn) activeBtn.classList.add('active');
+
+      // Toggle content panes
+      document.querySelectorAll('.tab-content').forEach(pane => pane.classList.remove('active'));
+      document.getElementById(`tab-${tab}`).classList.add('active');
+    }
+
+    // Toggle elicitation questions if User ID is specified
+    function toggleElicitationQuestions() {
+      const userId = document.getElementById('b-user-id').value.trim();
+      const elicitationContainer = document.getElementById('b-elicitation-container');
+      const returningNotice = document.getElementById('b-returning-notice');
+
+      if (userId) {
+        elicitationContainer.style.display = 'none';
+        returningNotice.style.display = 'block';
+      } else {
+        elicitationContainer.style.display = 'flex';
+        returningNotice.style.display = 'none';
+      }
+    }
+
+    // Task A: RUN SIMULATION
+    async function runSimulation() {
+      // Elements
+      const emptyState = document.getElementById('a-empty');
+      const loader = document.getElementById('a-loader');
+      const errorBox = document.getElementById('a-error');
+      const resultContainer = document.getElementById('a-result');
+
+      // Forms
+      const userId = document.getElementById('a-user-id').value.trim();
+      const itemAsin = document.getElementById('a-item-asin').value.trim();
+      const itemTitle = document.getElementById('a-item-title').value.trim();
+      const itemDesc = document.getElementById('a-item-desc').value.trim();
+      const nigerianMode = document.getElementById('a-nigerian-mode').checked;
+
+      // Validate
+      if (!itemTitle) {
+        showSimulatorError("Please enter an item name!");
+        return;
+      }
+
+      // Toggle views
+      emptyState.style.display = 'none';
+      errorBox.style.display = 'none';
+      resultContainer.style.display = 'none';
+      loader.style.display = 'flex';
+
+      try {
+        const response = await fetch('http://localhost:8001/simulate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            user_id: userId || null,
+            item_asin: itemAsin || "B00YQ6X8EO",
+            item_title: itemTitle,
+            item_description: itemDesc,
+            nigerian_mode: nigerianMode
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server returned code ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // Fill Rating Stars
+        const stars = document.querySelectorAll('#a-result .star');
+        stars.forEach((star, index) => {
+          if (index < data.rating) {
+            star.classList.add('active');
+          } else {
+            star.classList.remove('active');
+          }
+        });
+
+        // Set Text
+        document.getElementById('a-persona-badge').innerText = data.persona_type;
+        document.getElementById('a-mode-badge').innerText = data.mode.replace('_', ' ');
+        document.getElementById('a-review-title').innerText = `"${data.review_title}"`;
+        document.getElementById('a-review-text').innerText = data.review_text;
+
+        // Toggle visibility
+        loader.style.display = 'none';
+        resultContainer.style.display = 'flex';
+      } catch (err) {
+        loader.style.display = 'none';
+        showSimulatorError(err.message);
+      }
+    }
+
+    function showSimulatorError(msg) {
+      document.getElementById('a-empty').style.display = 'none';
+      document.getElementById('a-loader').style.display = 'none';
+      document.getElementById('a-result').style.display = 'none';
+      
+      const errBox = document.getElementById('a-error');
+      document.getElementById('a-error-msg').innerText = `Error: ${msg}`;
+      errBox.style.display = 'flex';
+    }
+
+    // Task B: RUN RECOMMENDATION
+    async function runRecommendation() {
+      // Elements
+      const emptyState = document.getElementById('b-empty');
+      const loader = document.getElementById('b-loader');
+      const errorBox = document.getElementById('b-error');
+      const resultContainer = document.getElementById('b-result');
+
+      // Forms
+      const userId = document.getElementById('b-user-id').value.trim();
+      const productType = document.getElementById('b-product-type').value;
+      const priority = document.getElementById('b-priority').value;
+      const avoid = document.getElementById('b-avoid').value.trim();
+      const language = document.getElementById('b-language').value;
+
+      // Toggle views
+      emptyState.style.display = 'none';
+      errorBox.style.display = 'none';
+      resultContainer.style.display = 'none';
+      loader.style.display = 'flex';
+
+      try {
+        const payload = {
+          user_id: userId || null,
+          product_type: userId ? null : productType,
+          priority: userId ? null : priority,
+          avoid: userId ? null : avoid,
+          language: language,
+          nigerian_mode: true
+        };
+
+        const response = await fetch('http://localhost:8002/recommend', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server returned code ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Fill Reasoning
+        document.getElementById('b-reasoning').innerText = data.reasoning;
+
+        // Render Candidates
+        const listContainer = document.getElementById('b-recs-list');
+        listContainer.innerHTML = ''; // Clear
+
+        data.recommendations.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'rec-card';
+
+          card.innerHTML = `
+            <div class="rec-rank">${item.rank}</div>
+            <div class="rec-info">
+              <div class="rec-title">${item.title}</div>
+              <div class="rec-explanation">${item.explanation}</div>
+            </div>
+            <div class="rec-stats">
+              <div class="rec-rating">
+                <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                ${item.avg_rating.toFixed(1)}
+              </div>
+              <div class="rec-count">${item.review_count} reviews</div>
+            </div>
+          `;
+
+          listContainer.appendChild(card);
+        });
+
+        // Toggle visibility
+        loader.style.display = 'none';
+        resultContainer.style.display = 'flex';
+      } catch (err) {
+        loader.style.display = 'none';
+        showRecommenderError(err.message);
+      }
+    }
+
+    function showRecommenderError(msg) {
+      document.getElementById('b-empty').style.display = 'none';
+      document.getElementById('b-loader').style.display = 'none';
+      document.getElementById('b-result').style.display = 'none';
+      
+      const errBox = document.getElementById('b-error');
+      document.getElementById('b-error-msg').innerText = `Error: ${msg}`;
+      errBox.style.display = 'flex';
+    }
+
+    // Fetch API telemetry stats
+    async function updateTelemetry() {
+      try {
+        let response;
+        try {
+          response = await fetch('http://localhost:8001/stats');
+        } catch (e) {
+          response = await fetch('http://localhost:8002/stats');
+        }
+        
+        if (!response.ok) return;
+        const data = await response.json();
+        
+        document.getElementById('telemetry-total').innerText = data.total_requests;
+        document.getElementById('telemetry-active-name').innerText = `Active: ${data.active_provider.replace('-versatile', '')}`;
+        
+        data.providers.forEach(p => {
+          let reqSpan, dot;
+          if (p.provider === 'gemini-2.0-flash') {
+            reqSpan = document.getElementById('req-gemini-20');
+            dot = document.getElementById('dot-gemini-20');
+          } else if (p.provider === 'gemini-1.5-flash') {
+            reqSpan = document.getElementById('req-gemini-15');
+            dot = document.getElementById('dot-gemini-15');
+          } else if (p.provider === 'deepseek-r1-distill-llama-70b') {
+            reqSpan = document.getElementById('req-cerebras-deepseek');
+            dot = document.getElementById('dot-cerebras-deepseek');
+          } else if (p.provider === 'groq-llama-3.3-70b') {
+            reqSpan = document.getElementById('req-groq-llama');
+            dot = document.getElementById('dot-groq-llama');
+          }
+
+          
+          if (reqSpan && dot) {
+            reqSpan.innerText = p.requests_made;
+            dot.className = 'status-dot';
+            if (p.is_exhausted) {
+              dot.classList.add('exhausted');
+            } else if (data.active_provider === p.provider) {
+              dot.classList.add('active');
+            } else {
+              dot.classList.add('standby');
+            }
+          }
+        });
+      } catch (err) {
+        console.error("Telemetry failed:", err);
+      }
+    }
+    
+    // Initial fetch and poll every 30s
+    updateTelemetry();
+    setInterval(updateTelemetry, 30000);
+
+    // Collapsible Panel state management
+    function toggleTelemetryPanel() {
+      const panel = document.querySelector('.telemetry-panel');
+      panel.classList.toggle('collapsed');
+      localStorage.setItem('telemetryCollapsed', panel.classList.contains('collapsed'));
+    }
+
+    // Load initial panel state
+    if (localStorage.getItem('telemetryCollapsed') === 'true') {
+      document.querySelector('.telemetry-panel').classList.add('collapsed');
+    }
+  </script>
+
+
+  <!-- Live Telemetry Panel -->
+  <div class="telemetry-panel">
+    <div class="telemetry-header">
+      <span>API Pool Health</span>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span class="telemetry-muted">Live</span>
+        <div class="live-dot"></div>
+        <button class="telemetry-toggle-btn" onclick="toggleTelemetryPanel()" title="Minimize Panel" style="margin-left: 4px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+      </div>
+    </div>
+
+    
+    <div class="telemetry-item">
+      <div class="telemetry-item-name">
+        <div class="status-dot" id="dot-gemini-20"></div>
+        <span>Gemini 2.0 (Primary)</span>
+      </div>
+      <div class="telemetry-reqs"><span id="req-gemini-20">0</span> <span class="telemetry-muted">req</span></div>
+    </div>
+    
+    <div class="telemetry-item">
+      <div class="telemetry-item-name">
+        <div class="status-dot" id="dot-gemini-15"></div>
+        <span>Gemini 1.5 (Secondary)</span>
+      </div>
+      <div class="telemetry-reqs"><span id="req-gemini-15">0</span> <span class="telemetry-muted">req</span></div>
+    </div>
+    
+    <div class="telemetry-item">
+      <div class="telemetry-item-name">
+        <div class="status-dot" id="dot-cerebras-deepseek"></div>
+        <span>Cerebras DeepSeek (Fallback)</span>
+      </div>
+      <div class="telemetry-reqs"><span id="req-cerebras-deepseek">0</span> <span class="telemetry-muted">req</span></div>
+    </div>
+    
+    <div class="telemetry-item">
+      <div class="telemetry-item-name">
+        <div class="status-dot" id="dot-groq-llama"></div>
+        <span>Groq Llama (Fallback)</span>
+      </div>
+      <div class="telemetry-reqs"><span id="req-groq-llama">0</span> <span class="telemetry-muted">req</span></div>
+    </div>
+
+    
+    <div style="display:flex; justify-content:space-between; margin-top:2px; font-size:0.75rem; color:var(--text-muted); border-top:1px solid rgba(255, 255, 255, 0.05); padding-top:0.4rem;">
+      <span>Total Calls: <strong id="telemetry-total" style="color:white;">0</strong></span>
+      <span id="telemetry-active-name">Active: None</span>
+    </div>
+  </div>
+</body>
+</html>
