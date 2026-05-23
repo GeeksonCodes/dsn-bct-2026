@@ -603,6 +603,24 @@ def llm_rerank_safe(
 #  ENDPOINTS
 # ══════════════════════════════════════════════════════════════════
 
+@app.get("/products")
+def get_products(category: str = "all", limit: int = 50):
+    """Returns sample products for the review simulator dropdown"""
+    sample = item_meta.sample(min(limit, len(item_meta)))
+    return {
+        "products": [
+            {
+                "asin" : row["parent_asin"],
+                "title": row["title"][:80],
+                "rating": round(row["avg_rating"], 1),
+                "reviews": int(row["review_count"])
+            }
+            for _, row in sample.iterrows()
+            if len(str(row["title"])) > 10  # filter empty titles
+        ]
+    }
+
+
 @app.get("/health")
 def health():
     """Health check with evaluation metrics."""

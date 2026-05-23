@@ -1299,12 +1299,16 @@
         
         <div class="form-group">
           <label for="a-item-asin">Item ASIN</label>
-          <input type="text" id="a-item-asin" value="B00YQ6X8EO">
+          <input type="text" id="a-item-asin" value="B00YQ6X8EO" readonly style="background: rgba(255,255,255,0.05); cursor: not-allowed;">
         </div>
 
         <div class="form-group">
-          <label for="a-item-title">Item Name</label>
-          <input type="text" id="a-item-title" value="Lavender Body Lotion">
+          <label for="product-search">Search & Select Product</label>
+          <input type="text" id="product-search" placeholder="Type to search products..." oninput="filterProducts()">
+          <select id="product-select" size="5" style="margin-top: 5px; height: 150px;" onchange="selectProduct()">
+            <!-- populated by JS -->
+          </select>
+          <input type="hidden" id="a-item-title">
         </div>
 
         <div class="form-group">
@@ -1312,14 +1316,38 @@
           <textarea id="a-item-desc" placeholder="A lightweight daily moisturiser with calming lavender scent.">A lightweight daily moisturiser with calming lavender scent.</textarea>
         </div>
 
+        <!-- Language Selector -->
+        <div class="form-group">
+          <label for="a-language">Response Language</label>
+          <select id="a-language">
+            <option value="pidgin">Nigerian Pidgin</option>
+            <option value="yoruba">Yoruba-English Mix</option>
+            <option value="hausa">Hausa-English Mix</option>
+            <option value="igbo">Igbo-English Mix</option>
+            <option value="english" selected>Nigerian English</option>
+          </select>
+        </div>
+
         <!-- Nigerian Toggle -->
         <div class="toggle-group">
           <div class="toggle-label">
-            <span>Nigerian Pidgin Mode</span>
+            <span>Nigerian Mode</span>
             <span>Condition generation with local flavor</span>
           </div>
           <label class="switch">
             <input type="checkbox" id="a-nigerian-mode" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- Variations Toggle -->
+        <div class="toggle-group">
+          <div class="toggle-label">
+            <span>Generate 3 Variations</span>
+            <span>Get multiple options to choose from</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="a-variations-mode">
             <span class="slider"></span>
           </label>
         </div>
@@ -1488,6 +1516,52 @@
        JAVASCRIPT DYNAMIC ROUTING & INTERACTIVE STATES
        ══════════════════════════════════════════════════════════════════ */
 
+    let allProducts = [];
+
+    // On load
+    window.onload = () => {
+      fetchProducts();
+      updateTelemetry();
+    };
+
+    async function fetchProducts() {
+      try {
+        const response = await fetch('http://localhost:8002/products');
+        const data = await response.json();
+        allProducts = data.products;
+        populateProductSelect(allProducts);
+      } catch (err) {
+        console.error("Failed to fetch products:", err);
+      }
+    }
+
+    function populateProductSelect(products) {
+      const select = document.getElementById('product-select');
+      select.innerHTML = '';
+      products.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.asin;
+        opt.innerText = `${p.title} (⭐${p.rating})`;
+        opt.dataset.title = p.title;
+        select.appendChild(opt);
+      });
+    }
+
+    function filterProducts() {
+      const search = document.getElementById('product-search').value.toLowerCase();
+      const filtered = allProducts.filter(p => p.title.toLowerCase().includes(search) || p.asin.toLowerCase().includes(search));
+      populateProductSelect(filtered);
+    }
+
+    function selectProduct() {
+      const select = document.getElementById('product-select');
+      const selectedOption = select.options[select.selectedIndex];
+      if (selectedOption) {
+        document.getElementById('a-item-asin').value = selectedOption.value;
+        document.getElementById('a-item-title').value = selectedOption.dataset.title;
+      }
+    }
+
     function switchTab(tab) {
       // Toggle nav buttons
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -1529,11 +1603,13 @@
       const itemAsin = document.getElementById('a-item-asin').value.trim();
       const itemTitle = document.getElementById('a-item-title').value.trim();
       const itemDesc = document.getElementById('a-item-desc').value.trim();
+      const language = document.getElementById('a-language').value;
       const nigerianMode = document.getElementById('a-nigerian-mode').checked;
+      const variationsMode = document.getElementById('a-variations-mode').checked;
 
       // Validate
       if (!itemTitle) {
-        showSimulatorError("Please enter an item name!");
+        showSimulatorError("Please select an item first!");
         return;
       }
 
@@ -1551,10 +1627,12 @@
           },
           body: JSON.stringify({
             user_id: userId || null,
-            item_asin: itemAsin || "B00YQ6X8EO",
+            item_asin: itemAsin,
             item_title: itemTitle,
             item_description: itemDesc,
-            nigerian_mode: nigerianMode
+            language: language,
+            nigerian_mode: nigerianMode,
+            num_variations: variationsMode ? 3 : 1
           })
         });
 
@@ -1563,22 +1641,54 @@
         }
 
         const data = await response.json();
+        const variations = Array.isArray(data) ? data : [data];
         
-        // Fill Rating Stars
-        const stars = document.querySelectorAll('#a-result .star');
-        stars.forEach((star, index) => {
-          if (index < data.rating) {
-            star.classList.add('active');
-          } else {
-            star.classList.remove('active');
-          }
-        });
+        // Clear and prepare result container
+        resultContainer.innerHTML = '';
+        resultContainer.style.flexDirection = variations.length > 1 ? 'row' : 'column';
+        resultContainer.style.flexWrap = 'wrap';
+        resultContainer.style.justifyContent = 'center';
 
-        // Set Text
-        document.getElementById('a-persona-badge').innerText = data.persona_type;
-        document.getElementById('a-mode-badge').innerText = data.mode.replace('_', ' ');
-        document.getElementById('a-review-title').innerText = `"${data.review_title}"`;
-        document.getElementById('a-review-text').innerText = data.review_text;
+        variations.forEach((v, idx) => {
+          const card = document.createElement('div');
+          card.className = 'result-card-inner';
+          card.style.flex = variations.length > 1 ? '1 1 300px' : '1';
+          card.style.maxWidth = variations.length > 1 ? '400px' : 'none';
+          card.style.display = 'flex';
+          card.style.flexDirection = 'column';
+          card.style.gap = '1rem';
+          card.style.background = 'rgba(255,255,255,0.02)';
+          card.style.padding = '1.5rem';
+          card.style.border = '1px solid rgba(255,255,255,0.05)';
+          card.style.borderRadius = '16px';
+
+          let starsHtml = '';
+          for (let i = 0; i < 5; i++) {
+            starsHtml += `<svg class="star ${i < v.rating ? 'active' : ''}" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`;
+          }
+
+          card.innerHTML = `
+            <div class="rating-header" style="background: none; border: none; padding: 0;">
+              <div>
+                <div class="rating-stars">${starsHtml}</div>
+              </div>
+              <div style="text-align: right; display:flex; flex-direction:column; gap:5px; align-items:flex-end;">
+                <span class="badge-pill">${v.persona_type}</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">${v.mode.replace('_', ' ')}</span>
+              </div>
+            </div>
+            <div class="review-body" style="background: none; border: none; padding: 1rem 0;">
+              <div class="review-heading" style="font-weight: 800;">${v.review_title}</div>
+              <div class="review-text-content">${v.review_text}</div>
+            </div>
+            ${variations.length > 1 ? `
+              <button class="btn-submit" style="padding: 0.6rem; font-size: 0.85rem;" onclick="copyToClipboard(\`${v.review_text.replace(/`/g, '\\`')}\`)">
+                Use This (Copy)
+              </button>
+            ` : ''}
+          `;
+          resultContainer.appendChild(card);
+        });
 
         // Toggle visibility
         loader.style.display = 'none';
@@ -1587,6 +1697,12 @@
         loader.style.display = 'none';
         showSimulatorError(err.message);
       }
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert("Review copied to clipboard!");
+      });
     }
 
     function showSimulatorError(msg) {
@@ -1654,12 +1770,14 @@
         data.recommendations.forEach(item => {
           const card = document.createElement('div');
           card.className = 'rec-card';
+          
+          const explanation = item.explanation || `Strong match — ⭐${item.avg_rating.toFixed(1)} from ${item.review_count} buyers`;
 
           card.innerHTML = `
             <div class="rec-rank">${item.rank}</div>
             <div class="rec-info">
               <div class="rec-title">${item.title}</div>
-              <div class="rec-explanation">${item.explanation}</div>
+              <div class="rec-explanation">${explanation}</div>
             </div>
             <div class="rec-stats">
               <div class="rec-rating">
