@@ -930,13 +930,55 @@ GROQ_API_KEY=your_groq_key
 ### Get Groq API Key (Free)
 1. Go to console.groq.com
 2. Sign up free
-3. API Keys → Create API Key
+3. API Keys -> Create API Key
 4. Copy key starting with gsk_...
 ```
 
 ---
 
-*Last updated: May 20, 2026 — Day 10 of 14*
+## 17. Web UI Pages
+
+### Page 1 — Landing Page (shown first)
+- Hero section with tagline: "Products wey fit you, explained in your language"
+- Two CTA buttons: "Get Recommendations 🛍️" and "Simulate a Review ✍️"
+- Prominent metrics display row:
+  📊 NDCG@10: 0.42 | 🎯 Hit Rate: 66% | 🗣️ 4 Languages | 👤 3 User Modes
+- "How it works" section:
+  - Step 1: "Answer 3 quick questions about your preferences"
+  - Step 2: "Our AI finds products that match YOUR style"
+  - Step 3: "Get explanations in your Nigerian language"
+- Architecture Section — simple visual nodes mapping out:
+  - Task A Pipeline: User ID + Item -> Agent 1 (Persona Analyst) -> PersonaDossier -> RAG Retrieval -> Agent 2 (Review Generator) -> Simulated Review + Rating
+  - Task B Pipeline: User Input -> Cold-Start/1-Shot/History Detection -> FAISS Retrieval (112k items) -> Blended Scoring (50/50) -> LLM Reranker -> Nigerian Recommendations
+  - Shared Infrastructure: 5-Provider LLM Pool (Gemini 2.0 -> Gemini 1.5 -> Cerebras -> DeepSeek -> Groq), Auto-rotation, Live performance monitoring, Amazon Reviews 2023 Dataset (701,528 reviews, 631,986 users)
+- Team Section:
+  - Team Name: "Team Drizzy x Metro"
+  - Card 1: Drizzy (Agoro Oluwatimilehin) — Role: ML Engineer — Task: Task B — Recommendation System (Avatar circle: "OT")
+  - Card 2: Metro (Ajiboye Toluwalase) — Role: ML Engineer — Task: Task A — User Modeling (Avatar circle: "AT")
+  - Tagline: "DSN x BCT Hackathon 3.0 — May 2026"
+
+### Page 2 — Recommender (Task B)
+- Language selector (Pidgin / Yoruba / Hausa / Igbo / English)
+- Optional User ID field
+- 3 elicitation questions (shown if no user ID)
+- Results: 5 recommendation cards with product details and Nigerian contextualized reasoning
+
+### Page 3 — Review Simulator (Task A)
+- Item name input
+- Item description textarea
+- Optional User ID field
+- Language toggle: English / Nigerian Pidgin
+- Output: star rating display + generated review text
+
+### Shared Footer (all pages)
+- API Health panel — provider stats bar
+- Progress health bar showing requests made / latency relative to the active provider pool
+- Updates every 30 seconds via GET /stats
+
+---
+
+*Last updated: May 23, 2026 — Day 13 of 14*
 *Timilehin handles: FastAPI, Docker, Web UI*
 *Teammate handles: Solution paper*
 *Repo: dsn-bct-2026/dsn-bct-llm-agent*
+
