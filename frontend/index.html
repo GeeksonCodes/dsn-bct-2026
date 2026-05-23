@@ -674,10 +674,11 @@
       display: flex;
       flex-direction: column;
       gap: 0.8rem;
-      z-index: 1000;
+      z-index: 999999 !important;
       transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
       font-family: var(--font-jakarta);
     }
+
     
     .telemetry-panel.collapsed {
       height: 44px;
@@ -706,12 +707,14 @@
       border: none;
       color: var(--text-muted);
       cursor: pointer;
-      padding: 2px;
+      padding: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: transform 0.3s ease, color 0.2s ease;
+      pointer-events: none;
     }
+
     
     .telemetry-toggle-btn:hover {
       color: white;
@@ -732,7 +735,15 @@
       align-items: center;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       padding-bottom: 0.5rem;
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.2s ease;
     }
+    
+    .telemetry-header:hover {
+      color: var(--accent-gold);
+    }
+
     
     .telemetry-header .live-dot {
       width: 8px;
@@ -1745,16 +1756,17 @@
 
   <!-- Live Telemetry Panel -->
   <div class="telemetry-panel">
-    <div class="telemetry-header">
+    <div class="telemetry-header" onclick="toggleTelemetryPanel()" title="Toggle Panel View">
       <span>API Pool Health</span>
-      <div style="display:flex; align-items:center; gap:6px;">
+      <div style="display:flex; align-items:center; gap:6px; pointer-events: none;">
         <span class="telemetry-muted">Live</span>
         <div class="live-dot"></div>
-        <button class="telemetry-toggle-btn" onclick="toggleTelemetryPanel()" title="Minimize Panel" style="margin-left: 4px;">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        <button class="telemetry-toggle-btn" title="Minimize Panel" style="margin-left: 4px;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><polyline points="6 9 12 15 18 9" style="pointer-events: none;"></polyline></svg>
         </button>
       </div>
     </div>
+
 
     
     <div class="telemetry-item">
