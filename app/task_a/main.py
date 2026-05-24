@@ -105,8 +105,8 @@ VARIATION_STYLES = [
 
 class Provider(Enum):
     GEMINI_20 = "gemini-2.0-flash"
-    GEMINI_15 = "gemini-1.5-flash-latest"
-    CEREBRAS = "llama3.3-70b"
+    GEMINI_15 = "gemini-1.5-flash"
+    CEREBRAS = "cerebras-llama-3.3-70b"
     DEEPSEEK = "deepseek-chat"
     GROQ = "groq-llama-3.3-70b"
 
@@ -148,7 +148,7 @@ class MultiProviderKeyManager:
             (Provider.GEMINI_20, "GOOGLE_API_KEY_1"),
             (Provider.GEMINI_15, "GOOGLE_API_KEY_2"),
             (Provider.CEREBRAS, "CEREBRAS_API_KEY"),
-            # (Provider.DEEPSEEK, "DEEPSEEK_API_KEY"),
+            (Provider.DEEPSEEK, "DEEPSEEK_API_KEY"),
             (Provider.GROQ, "GROQ_API_KEY"),
         ]
         for provider, env_var in configs:
@@ -208,7 +208,7 @@ class MultiProviderKeyManager:
 
             client = Cerebras(api_key=ks.api_key)
             response = client.chat.completions.create(
-                model=p.value,
+                model="llama-3.3-70b",
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=1000,
             )
