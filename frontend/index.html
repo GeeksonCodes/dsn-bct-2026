@@ -1304,9 +1304,12 @@
 
         <div class="form-group">
           <label for="product-search">Search & Select Product</label>
-          <input type="text" id="product-search" placeholder="Type to search products..." oninput="filterProducts()">
-          <select id="product-select" size="5" style="margin-top: 5px; height: 150px;" onchange="selectProduct()">
-            <!-- populated by JS -->
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="product-search" placeholder="Search by name (e.g. 'Serum', 'Cream')..." oninput="filterProducts()" style="flex: 1;">
+            <button class="btn-submit" style="padding: 0 1rem; height: 42px; width: auto;" onclick="loadProducts(document.getElementById('product-search').value)">🔍</button>
+          </div>
+          <select id="product-select" style="margin-top: 5px;" onchange="selectProduct()">
+            <option value="">Loading featured products...</option>
           </select>
           <input type="hidden" id="a-item-title">
         </div>
@@ -1516,50 +1519,67 @@
        JAVASCRIPT DYNAMIC ROUTING & INTERACTIVE STATES
        ══════════════════════════════════════════════════════════════════ */
 
-    let allProducts = [];
-
     // On load
     window.onload = () => {
-      fetchProducts();
+      loadProducts();
       updateTelemetry();
     };
 
-    async function fetchProducts() {
+    // Load products with real items from Task B
+    async function loadProducts(search = "") {
+      console.log("loadProducts called with search:", search);
       try {
-        const response = await fetch('http://localhost:8002/products');
-        const data = await response.json();
-        allProducts = data.products;
-        populateProductSelect(allProducts);
+        const select = document.getElementById("product-select");
+        select.innerHTML = '<option value="">Searching...</option>';
+
+        const url = `http://localhost:8002/products?search=${encodeURIComponent(search)}&limit=50`;
+        console.log("Fetching from URL:", url);
+        
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`Backend error: ${res.status}`);
+        const data = await res.json();
+        
+        console.log("Data received:", data);
+        select.innerHTML = '';
+        
+        if (!data.products || data.products.length === 0) {
+            select.innerHTML = '<option value="">No products found. Try a different search.</option>';
+            return;
+        }
+
+        const initialOpt = document.createElement("option");
+        initialOpt.value = "";
+        initialOpt.text = search ? `Results for "${search}"` : "Select a product...";
+        select.appendChild(initialOpt);
+
+        data.products.forEach(p => {
+          const opt = document.createElement("option");
+          opt.value = JSON.stringify({asin: p.asin, title: p.title});
+          opt.text = `${p.title} (⭐${p.avg_rating}, ${p.review_count} reviews)`;
+          select.appendChild(opt);
+        });
       } catch (err) {
         console.error("Failed to fetch products:", err);
+        const select = document.getElementById("product-select");
+        select.innerHTML = `<option value="">Error: ${err.message}. Check if Task B is running on port 8002.</option>`;
       }
     }
 
-    function populateProductSelect(products) {
-      const select = document.getElementById('product-select');
-      select.innerHTML = '';
-      products.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p.asin;
-        opt.innerText = `${p.title} (⭐${p.rating})`;
-        opt.dataset.title = p.title;
-        select.appendChild(opt);
-      });
-    }
-
+    // Search with 300ms debounce
+    let searchTimer;
     function filterProducts() {
-      const search = document.getElementById('product-search').value.toLowerCase();
-      const filtered = allProducts.filter(p => p.title.toLowerCase().includes(search) || p.asin.toLowerCase().includes(search));
-      populateProductSelect(filtered);
+      const search = document.getElementById('product-search').value.trim();
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => loadProducts(search), 300);
     }
 
     function selectProduct() {
       const select = document.getElementById('product-select');
-      const selectedOption = select.options[select.selectedIndex];
-      if (selectedOption) {
-        document.getElementById('a-item-asin').value = selectedOption.value;
-        document.getElementById('a-item-title').value = selectedOption.dataset.title;
-      }
+      if (!select.value) return;
+      
+      const product = JSON.parse(select.value);
+      document.getElementById('a-item-asin').value = product.asin;
+      document.getElementById('a-item-title').value = product.title;
     }
 
     function switchTab(tab) {
@@ -1641,7 +1661,9 @@
         }
 
         const data = await response.json();
-        const variations = Array.isArray(data) ? data : [data];
+        const variations = Array.isArray(data)
+          ? data
+          : (Array.isArray(data.variations) ? data.variations : [data]);
         
         // Clear and prepare result container
         resultContainer.innerHTML = '';
@@ -1673,8 +1695,8 @@
                 <div class="rating-stars">${starsHtml}</div>
               </div>
               <div style="text-align: right; display:flex; flex-direction:column; gap:5px; align-items:flex-end;">
-                <span class="badge-pill">${v.persona_type}</span>
-                <span style="font-size: 0.75rem; color: var(--text-muted);">${v.mode.replace('_', ' ')}</span>
+                <span class="badge-pill">${v.persona_type || data.persona_type || v.style || 'review'}</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">${(v.mode || data.mode || v.style || 'generated').replace('_', ' ')}</span>
               </div>
             </div>
             <div class="review-body" style="background: none; border: none; padding: 1rem 0;">
@@ -1771,7 +1793,7 @@
           const card = document.createElement('div');
           card.className = 'rec-card';
           
-          const explanation = item.explanation || `Strong match — ⭐${item.avg_rating.toFixed(1)} from ${item.review_count} buyers`;
+          const explanation = item.explanation || `Strong match — ⭐${item.avg_rating.toFixed(1)} from ${item.review_count} buyers.`;
 
           card.innerHTML = `
             <div class="rec-rank">${item.rank}</div>
@@ -1824,9 +1846,15 @@
         
         if (!response.ok) return;
         const data = await response.json();
-        
-        document.getElementById('telemetry-total').innerText = data.total_requests;
-        document.getElementById('telemetry-active-name').innerText = `Active: ${data.active_provider.replace('-versatile', '')}`;
+
+        const totalNode = document.getElementById('telemetry-total');
+        const activeNode = document.getElementById('telemetry-active-name');
+        if (totalNode) {
+          totalNode.innerText = data.total_requests;
+        }
+        if (activeNode) {
+          activeNode.innerText = `Active: ${(data.active_provider || 'none').replace('-versatile', '')}`;
+        }
         
         const total = data.total_requests || 0;
         data.providers.forEach(p => {
@@ -1880,20 +1908,26 @@
 
     
     // Initial fetch and poll every 30s
-    updateTelemetry();
-    setInterval(updateTelemetry, 30000);
+    function startTelemetryPolling() {
+      updateTelemetry();
+      setInterval(updateTelemetry, 30000);
+    }
 
     // Collapsible Panel state management
     function toggleTelemetryPanel() {
       const panel = document.querySelector('.telemetry-panel');
+      if (!panel) return;
       panel.classList.toggle('collapsed');
       localStorage.setItem('telemetryCollapsed', panel.classList.contains('collapsed'));
     }
 
-    // Load initial panel state
-    if (localStorage.getItem('telemetryCollapsed') === 'true') {
-      document.querySelector('.telemetry-panel').classList.add('collapsed');
-    }
+    document.addEventListener('DOMContentLoaded', () => {
+      const panel = document.querySelector('.telemetry-panel');
+      if (panel && localStorage.getItem('telemetryCollapsed') === 'true') {
+        panel.classList.add('collapsed');
+      }
+      startTelemetryPolling();
+    });
   </script>
 
 

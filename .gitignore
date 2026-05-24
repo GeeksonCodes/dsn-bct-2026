@@ -2,6 +2,12 @@
 # Ignore Codacy CLI configuration (local)
 .codacy/
 
+# Local secrets and assistant caches
+.env
+.aider.tags.cache.v4/
+.aider.chat.history.md
+.aider.input.history
+
 # Ignore vscode AI rules
 .github/
 .github\instructions\codacy.instructions.md

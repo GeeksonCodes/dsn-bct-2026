@@ -3,8 +3,8 @@ version: "3.8"
 services:
   task_a:
     build:
-      context: .
-      dockerfile: app/task_a/Dockerfile
+      context: ./app/task_a
+      dockerfile: Dockerfile
     container_name: dsn-bct-task-a
     ports:
       - "8001:8001"
@@ -13,14 +13,15 @@ services:
       - GOOGLE_API_KEY_1=${GOOGLE_API_KEY_1}
       - GOOGLE_API_KEY_2=${GOOGLE_API_KEY_2}
       - CEREBRAS_API_KEY=${CEREBRAS_API_KEY}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
       - GROQ_API_KEY=${GROQ_API_KEY}
 
     restart: unless-stopped
 
   task_b:
     build:
-      context: .
-      dockerfile: app/task_b/Dockerfile
+      context: ./app/task_b
+      dockerfile: Dockerfile
     container_name: dsn-bct-task-b
     ports:
       - "8002:8002"
@@ -29,6 +30,7 @@ services:
       - GOOGLE_API_KEY_1=${GOOGLE_API_KEY_1}
       - GOOGLE_API_KEY_2=${GOOGLE_API_KEY_2}
       - CEREBRAS_API_KEY=${CEREBRAS_API_KEY}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
       - GROQ_API_KEY=${GROQ_API_KEY}
 
     restart: unless-stopped

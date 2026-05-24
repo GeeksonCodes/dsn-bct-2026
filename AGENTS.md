@@ -977,7 +977,45 @@ GROQ_API_KEY=your_groq_key
 
 ---
 
-*Last updated: May 23, 2026 — Day 13 of 14*
+## 18. Implemented Backend Methodology (May 24 Rewrite)
+
+This repo now uses compact, production-oriented FastAPI backends for both tasks. The rewrite intentionally removed notebook-heavy control flow from `app/task_a/main.py` and `app/task_b/main.py` so the live demo is easier to debug, restart, and explain.
+
+### Shared LLM Methodology
+- Both APIs initialise a `MultiProviderKeyManager` once at import time after loading `.env` from the repo root.
+- Provider order is Gemini 2.0 Flash, Gemini 1.5 Flash, Cerebras, DeepSeek, then Groq.
+- Every LLM call goes through `generate(prompt)`, which rotates providers on rate limits and records request counts, latency, and error status for `/stats`.
+- Both APIs expose `/health` and `/stats` so the frontend can show service status and provider telemetry.
+
+### Task B Recommendation Methodology
+- Startup loads `items.index`, `item_meta.pkl`, and `SentenceTransformer("all-MiniLM-L6-v2", device="cpu")` once.
+- Startup verifies the FAISS dimension and embedding dimension are both `384`.
+- Retrieval uses MiniLM embeddings with FAISS inner-product search over the real `112,565` item index.
+- Candidate scoring blends semantic similarity and popularity with the confirmed 50/50 formula: `final_score = 0.5 * sem_score + 0.5 * pop_score`.
+- Query construction uses positive framing only, while avoided terms are applied after retrieval with `post_filter()`.
+- The LLM reranker always shuffles candidates before prompting to reduce positional bias.
+- The selected `language` is injected into the reranker prompt through `LANGUAGE_PROMPTS`; explanations must be written in the requested Nigerian language style.
+- Reranker parsing maps LLM product titles back to real candidates using word overlap, preventing hallucinated product names from entering the response.
+- If the LLM fails or parsing is incomplete, fallback explanations are language-specific rather than generic English.
+- `/products` reads from real `item_meta.pkl`, filters noisy review-like titles, and returns high-review products for the simulator dropdown.
+
+### Task A Review Simulation Methodology
+- Task A now focuses on reliable cold-start review generation for the demo path.
+- The API accepts `language`, `nigerian_mode`, and `num_variations` directly in the request body.
+- The selected `language` is injected into every review prompt through the same `LANGUAGE_PROMPTS` dictionary used by Task B.
+- Three variation styles force distinct outputs: `brief`, `detailed`, and `emotional`.
+- Each variation receives its own prompt and style instruction, preventing repeated identical reviews.
+- The model is required to return a parseable text format: `RATING`, `TITLE`, and `REVIEW`.
+- The endpoint returns a stable `SimulateResponse` object with a `variations` list so the frontend can render all generated options consistently.
+
+### Frontend Compatibility Notes
+- The review simulator UI now accepts the new Task A response shape: `{ variations: [...] }`.
+- The recommender UI continues to call Task B at `http://localhost:8002/recommend`.
+- The review simulator UI calls Task A at `http://localhost:8001/simulate`; if Task A is offline, the browser will show `Failed to fetch`.
+
+---
+
+*Last updated: May 24, 2026 — backend rewrite methodology added*
 *Timilehin handles: FastAPI, Docker, Web UI*
 *Teammate handles: Solution paper*
 *Repo: dsn-bct-2026/dsn-bct-llm-agent*
