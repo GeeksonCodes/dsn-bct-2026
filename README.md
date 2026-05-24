@@ -78,6 +78,64 @@ docker-compose up --build
 *   **Task A Backend**: Available at `http://localhost:8001/`
 *   **Task B Backend**: Available at `http://localhost:8002/`
 
+### 2b. Free Cloud Deployment: Hugging Face Spaces
+Use two Docker Spaces, one per backend. Hugging Face requires port `7860`; both task Dockerfiles now default to `${PORT:-7860}` while Docker Compose sets local ports explicitly.
+
+Create Spaces:
+```text
+bct-task-a-reviewer       SDK: Docker
+bct-task-b-recommender    SDK: Docker
+```
+
+For each Space repo, copy the matching task folder contents into the Space root:
+```bash
+# Task A Space
+cp app/task_a/main.py .
+cp app/task_a/requirements.txt .
+cp app/task_a/Dockerfile .
+
+# Task B Space
+cp app/task_b/main.py .
+cp app/task_b/requirements.txt .
+cp app/task_b/Dockerfile .
+cp app/task_b/items.index .
+cp app/task_b/item_meta.pkl .
+```
+
+Track Task B artifacts with Git LFS in the Task B Space:
+```bash
+git lfs install
+git lfs track "*.index"
+git lfs track "*.pkl"
+git add .gitattributes items.index item_meta.pkl main.py requirements.txt Dockerfile
+git commit -m "Deploy Task B recommendation API"
+git push
+```
+
+Add these Hugging Face Space secrets:
+```env
+GOOGLE_API_KEY_1=...
+GOOGLE_API_KEY_2=...
+CEREBRAS_API_KEY=...
+DEEPSEEK_API_KEY=...
+GROQ_API_KEY=...
+```
+
+After both Spaces are live, update `frontend/index.html`:
+```javascript
+const TASK_A_URL = "https://YOUR_USERNAME-bct-task-a-reviewer.hf.space";
+const TASK_B_URL = "https://YOUR_USERNAME-bct-task-b-recommender.hf.space";
+```
+
+Deploy the frontend from GitHub Pages using a `/docs` folder:
+```bash
+mkdir -p docs
+cp frontend/index.html docs/index.html
+git add docs/index.html
+git commit -m "Deploy frontend to GitHub Pages"
+git push
+```
+
 ### 3. Run Locally (Alternative)
 Set up a python virtual environment and run tasks:
 ```bash

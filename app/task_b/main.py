@@ -543,6 +543,28 @@ def health():
     }
 
 
+@app.get("/")
+def root():
+    return {
+        "name": "DSN x BCT - Task B Recommendation API",
+        "team": "Drizzy x Metro",
+        "version": "1.0.0",
+        "endpoints": [
+            "POST /recommend",
+            "GET /products",
+            "GET /health",
+            "GET /stats",
+            "GET /docs",
+        ],
+        "metrics": {
+            "ndcg_at_10": 0.4210,
+            "hit_rate_10": 0.6600,
+            "languages": ["pidgin", "yoruba", "hausa", "igbo", "english"],
+            "user_modes": ["cold_start", "one_shot", "history_based"],
+        },
+    }
+
+
 @app.get("/stats")
 def stats():
     return {
