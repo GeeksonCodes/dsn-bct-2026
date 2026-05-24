@@ -281,7 +281,7 @@ def parse_review_output(raw: str, item_title: str) -> tuple[int, str, str]:
 
     review_match = re.search(r"REVIEW:\s*(.+)", raw, re.DOTALL)
     review_text = review_match.group(1).strip() if review_match else raw.strip()
-    return rating, review_title[:100], review_text[:500]
+    return rating, review_title[:100], review_text[:1000]
 
 
 @app.post("/simulate", response_model=SimulateResponse)
