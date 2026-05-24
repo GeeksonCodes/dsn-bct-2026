@@ -351,6 +351,27 @@ def health():
     return {"status": "ok"}
 
 
+@app.get("/")
+def root():
+    return {
+        "name": "DSN x BCT - Task A User Review Simulator",
+        "team": "Drizzy x Metro",
+        "version": "1.0.0",
+        "endpoints": [
+            "POST /simulate",
+            "GET /health",
+            "GET /stats",
+            "GET /docs",
+        ],
+        "metrics": {
+            "rmse": 0.7071,
+            "bertscore": 0.8447,
+            "rouge_1": 0.3093,
+            "languages": ["pidgin", "yoruba", "hausa", "igbo", "english"],
+        },
+    }
+
+
 @app.get("/stats")
 def stats():
     return {
