@@ -276,6 +276,65 @@
       min-height: 100px;
     }
 
+    /* ── PERSONA PRESETS ── */
+    .persona-presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 0.8rem;
+      align-items: center;
+    }
+
+    .preset-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .preset-btn {
+      background: var(--accent);
+      border: 1px solid var(--border-color);
+      color: var(--foreground);
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .preset-btn:hover {
+      background: var(--primary);
+      color: var(--primary-foreground);
+      border-color: var(--primary);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+    }
+
+    .badge {
+      background: var(--accent);
+      color: var(--accent-foreground);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      margin-left: 4px;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .hint {
+      display: block;
+      margin-top: 0.4rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
     /* ── SLICK TOGGLE SWITCH ── */
     .toggle-group {
       display: flex;
@@ -1921,6 +1980,41 @@
           <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
           Review Parameters
         </div>
+
+        <div class="form-group">
+          <label for="user-persona">
+              User Persona 
+              <span class="badge">Optional</span>
+          </label>
+          <textarea 
+              id="user-persona"
+              name="user-persona"
+              rows="4"
+              placeholder="Describe the reviewer's personality and behaviour...
+
+Example: A stingy Nigerian buyer who is very price-conscious, 
+always compares prices to Computer Village or Slot. Rarely gives 
+more than 3 stars. Writes short blunt reviews. Uses Pidgin when 
+disappointed. Very sceptical of product claims."
+          ></textarea>
+          <small class="hint">
+              💡 Leave empty for AI-generated persona. 
+              Describe rating tendencies, writing style, and personality traits.
+          </small>
+        </div>
+
+        <div class="persona-presets">
+          <span class="preset-label">Quick presets:</span>
+          <button type="button" class="preset-btn" onclick="setPersona('stingy')">
+              😤 Stingy Critic
+          </button>
+          <button type="button" class="preset-btn" onclick="setPersona('enthusiast')">
+              🤩 Enthusiast
+          </button>
+          <button type="button" class="preset-btn" onclick="setPersona('balanced')">
+              🤔 Balanced
+          </button>
+        </div>
         
         <div class="form-group">
           <label for="a-user-id">User ID (Optional)</label>
@@ -2147,6 +2241,34 @@
   <script>
     const TASK_A_URL = "https://drizzy765-bct-task-a-reviewer.hf.space";
     const TASK_B_URL = "https://drizzy765-bct-task-b-recommender.hf.space";
+
+    /* ══════════════════════════════════════════════════════════════════
+       PERSONA PRESETS & DYNAMIC ROUTING
+       ══════════════════════════════════════════════════════════════════ */
+    const PERSONA_PRESETS = {
+        stingy: `A stingy Nigerian buyer. Very price-conscious, always 
+compares to Computer Village or Slot prices. Never gives 5 stars — 
+maximum is 3 stars. Writes short blunt reviews in Pidgin when 
+disappointed. Very sceptical of product claims. Always mentions 
+if something could be cheaper.`,
+
+        enthusiast: `An enthusiastic Nigerian beauty lover. Always 
+excited about new products, gives 4-5 stars regularly. Writes 
+detailed reviews mentioning scent, texture, and results. Very 
+community-oriented — recommends to family and friends. Loves 
+to mention value for money when satisfied.`,
+
+        balanced: `A balanced Nigerian reviewer. Gives fair ratings 
+between 3-4 stars. Mentions both pros and cons. Price-conscious 
+but appreciates quality. Writes medium-length reviews. Uses 
+occasional Pidgin phrases naturally. Trusts products with many 
+reviews.`
+    };
+
+    function setPersona(type) {
+        document.getElementById('user-persona').value = PERSONA_PRESETS[type];
+    }
+
     /* ══════════════════════════════════════════════════════════════════
        JAVASCRIPT DYNAMIC ROUTING & INTERACTIVE STATES
        ══════════════════════════════════════════════════════════════════ */
@@ -2252,6 +2374,7 @@
 
       // Forms
       const userId = document.getElementById('a-user-id').value.trim();
+      const userPersona = document.getElementById('user-persona').value.trim();
       const itemAsin = document.getElementById('a-item-asin').value.trim();
       const itemTitle = document.getElementById('a-item-title').value.trim();
       const itemDesc = document.getElementById('a-item-desc').value.trim();
@@ -2279,6 +2402,7 @@
           },
           body: JSON.stringify({
             user_id: userId || null,
+            user_persona: userPersona || null,
             item_asin: itemAsin,
             item_title: itemTitle,
             item_description: itemDesc,

@@ -198,8 +198,22 @@ class MultiProviderKeyManager:
             from google import genai
 
             client = genai.Client(api_key=ks.api_key)
-            response = client.models.generate_content(model=p.value, contents=prompt)
-            return response.text.strip()
+            models_to_try = [p.value]
+            if p == Provider.GEMINI_15:
+                models_to_try.extend(["gemini-2.0-flash", "gemini-1.5-flash-latest"])
+            else:
+                models_to_try.extend(["gemini-2.0-flash-exp"])
+
+            last_err = None
+            for model_name in models_to_try:
+                try:
+                    response = client.models.generate_content(model=model_name, contents=prompt)
+                    return response.text.strip()
+                except Exception as e:
+                    last_err = e
+                    print(f"⚠️ Gemini model {model_name} failed: {str(e)[:80]}")
+            raise last_err
+
         if p == Provider.CEREBRAS:
             try:
                 from cerebras.cloud.sdk import Cerebras
@@ -207,12 +221,21 @@ class MultiProviderKeyManager:
                 from cerebras.cloud import Cerebras
 
             client = Cerebras(api_key=ks.api_key)
-            response = client.chat.completions.create(
-                model="llama-3.3-70b",
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=1000,
-            )
-            return response.choices[0].message.content.strip()
+            models_to_try = ["llama3.3-70b", "llama-3.3-70b", "deepseek-r1-distill-llama-70b"]
+            last_err = None
+            for model_name in models_to_try:
+                try:
+                    response = client.chat.completions.create(
+                        model=model_name,
+                        messages=[{"role": "user", "content": prompt}],
+                        max_tokens=1000,
+                    )
+                    return response.choices[0].message.content.strip()
+                except Exception as e:
+                    last_err = e
+                    print(f"⚠️ Cerebras model {model_name} failed: {str(e)[:80]}")
+            raise last_err
+
         if p == Provider.DEEPSEEK:
             from openai import OpenAI
 
