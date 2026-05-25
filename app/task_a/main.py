@@ -120,6 +120,7 @@ class KeyStats:
     errors_other: int = 0
     total_latency: float = 0.0
     is_exhausted: bool = False
+    exhausted_until: float = 0.0
 
     @property
     def avg_latency(self):
@@ -137,7 +138,7 @@ class KeyStats:
                 * 100,
                 1,
             ),
-            "status": "exhausted" if self.is_exhausted else "active",
+            "status": "exhausted" if (self.is_exhausted and time.time() < self.exhausted_until) else "active",
         }
 
 
@@ -165,7 +166,12 @@ class MultiProviderKeyManager:
     def generate(self, prompt: str) -> Optional[str]:
         for ks in self.keys:
             if ks.is_exhausted:
-                continue
+                if time.time() > ks.exhausted_until:
+                    ks.is_exhausted = False
+                    ks.exhausted_until = 0.0
+                    print(f"🔄 Cooldown ended. Re-enabling provider: {ks.provider.value}")
+                else:
+                    continue
             start = time.time()
             try:
                 result = self._call(ks, prompt)
@@ -181,12 +187,9 @@ class MultiProviderKeyManager:
                 err = str(e)
                 if "429" in err or "RESOURCE_EXHAUSTED" in err:
                     ks.errors_429 += 1
-                    if "quota" in err.lower():
-                        ks.is_exhausted = True
-                        print(f"{ks.provider.value} quota exhausted")
-                    else:
-                        print(f"{ks.provider.value} rate limited, trying next")
-                        time.sleep(5)
+                    ks.is_exhausted = True
+                    ks.exhausted_until = time.time() + 15
+                    print(f"⚠️ {ks.provider.value} rate limited/exhausted. Cooldown for 15s.")
                 else:
                     ks.errors_other += 1
                     print(f"{ks.provider.value} error: {err[:80]}")
@@ -198,20 +201,25 @@ class MultiProviderKeyManager:
             from google import genai
 
             client = genai.Client(api_key=ks.api_key)
-            models_to_try = [p.value]
-            if p == Provider.GEMINI_15:
-                models_to_try.extend(["gemini-2.0-flash", "gemini-1.5-flash-latest"])
+            if p == Provider.GEMINI_20:
+                models_to_try = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash", "gemini-1.5-flash-8b"]
             else:
-                models_to_try.extend(["gemini-2.0-flash-exp"])
+                models_to_try = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-flash-8b", "gemini-2.0-flash-lite"]
 
             last_err = None
             for model_name in models_to_try:
-                try:
-                    response = client.models.generate_content(model=model_name, contents=prompt)
-                    return response.text.strip()
-                except Exception as e:
-                    last_err = e
-                    print(f"⚠️ Gemini model {model_name} failed: {str(e)[:80]}")
+                for attempt in range(2):
+                    try:
+                        response = client.models.generate_content(model=model_name, contents=prompt)
+                        return response.text.strip()
+                    except Exception as e:
+                        last_err = e
+                        err_msg = str(e)
+                        print(f"⚠️ Gemini model {model_name} failed (attempt {attempt+1}/2): {err_msg[:80]}")
+                        if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg:
+                            time.sleep(3)
+                        else:
+                            break
             raise last_err
 
         if p == Provider.CEREBRAS:
@@ -221,41 +229,68 @@ class MultiProviderKeyManager:
                 from cerebras.cloud import Cerebras
 
             client = Cerebras(api_key=ks.api_key)
-            models_to_try = ["llama3.3-70b", "llama-3.3-70b", "deepseek-r1-distill-llama-70b"]
+            models_to_try = ["llama-3.3-70b", "llama3.1-70b", "llama3.1-8b", "deepseek-r1-distill-llama-70b"]
             last_err = None
             for model_name in models_to_try:
-                try:
-                    response = client.chat.completions.create(
-                        model=model_name,
-                        messages=[{"role": "user", "content": prompt}],
-                        max_tokens=1000,
-                    )
-                    return response.choices[0].message.content.strip()
-                except Exception as e:
-                    last_err = e
-                    print(f"⚠️ Cerebras model {model_name} failed: {str(e)[:80]}")
+                for attempt in range(2):
+                    try:
+                        response = client.chat.completions.create(
+                            model=model_name,
+                            messages=[{"role": "user", "content": prompt}],
+                            max_tokens=1000,
+                        )
+                        return response.choices[0].message.content.strip()
+                    except Exception as e:
+                        last_err = e
+                        err_msg = str(e)
+                        print(f"⚠️ Cerebras model {model_name} failed (attempt {attempt+1}/2): {err_msg[:80]}")
+                        if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg:
+                            time.sleep(3)
+                        else:
+                            break
             raise last_err
 
         if p == Provider.DEEPSEEK:
             from openai import OpenAI
 
             client = OpenAI(api_key=ks.api_key, base_url="https://api.deepseek.com")
-            response = client.chat.completions.create(
-                model="deepseek-chat",
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=1000,
-            )
-            return response.choices[0].message.content.strip()
+            for attempt in range(2):
+                try:
+                    response = client.chat.completions.create(
+                        model="deepseek-chat",
+                        messages=[{"role": "user", "content": prompt}],
+                        max_tokens=1000,
+                    )
+                    return response.choices[0].message.content.strip()
+                except Exception as e:
+                    err_msg = str(e)
+                    print(f"⚠️ DeepSeek failed (attempt {attempt+1}/2): {err_msg[:80]}")
+                    if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg:
+                        time.sleep(3)
+                    else:
+                        raise e
+            raise last_err
+
         if p == Provider.GROQ:
             from groq import Groq
 
             client = Groq(api_key=ks.api_key)
-            response = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=1000,
-            )
-            return response.choices[0].message.content.strip()
+            for attempt in range(2):
+                try:
+                    response = client.chat.completions.create(
+                        model="llama-3.3-70b-versatile",
+                        messages=[{"role": "user", "content": prompt}],
+                        max_tokens=1000,
+                    )
+                    return response.choices[0].message.content.strip()
+                except Exception as e:
+                    err_msg = str(e)
+                    print(f"⚠️ Groq failed (attempt {attempt+1}/2): {err_msg[:80]}")
+                    if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg:
+                        time.sleep(3)
+                    else:
+                        raise e
+            raise last_err
         raise ValueError(f"Unsupported provider: {p}")
 
 
@@ -329,11 +364,9 @@ A Pidgin speaker MUST use Pidgin naturally."""
 Generate a realistic, persona-consistent review."""
         mode = "cold_start"
     
-    styles   = VARIATION_STYLES[:min(req.num_variations, 3)]
-    variations = []
+    styles = VARIATION_STYLES[:min(req.num_variations, 3)]
     
-    for style_info in styles:
-        prompt = f"""{language_block}
+    prompt = f"""{language_block}
 
 {persona_block}
 
@@ -342,48 +375,72 @@ Name        : {req.item_title}
 ASIN        : {req.item_asin}
 Description : {req.item_description or "A beauty and personal care product"}
 
-REVIEW STYLE INSTRUCTION:
-{style_info["instruction"]}
-
-LANGUAGE: Write the review in {lang_config["name"]}.
+You are to generate {len(styles)} review variations for this product matching the reviewer's persona.
+Write each variation in the specified style instruction:
+"""
+    for style_info in styles:
+        prompt += f"- STYLE '{style_info['style']}': {style_info['instruction']}\n"
+        
+    prompt += f"""
+LANGUAGE: Write the reviews in {lang_config["name"]}.
 {"Use authentic local language phrases naturally." if req.nigerian_mode else ""}
 
-Generate a realistic review that sounds EXACTLY like this persona.
+Generate realistic reviews that sound EXACTLY like this persona.
 
-Output EXACTLY in this format — nothing else:
+Output format for EACH style (use EXACTLY this format, separate them with '==='):
+"""
+    for style_info in styles:
+        prompt += f"""
+=== STYLE: {style_info['style']} ===
 RATING: [1-5]
 TITLE: [review title in {lang_config["name"]}]
-REVIEW: [full review text in {lang_config["name"]}]"""
+REVIEW: [full review text in {lang_config["name"]}]
+"""
 
-        raw = generate(prompt)
-        
-        if not raw:
+    raw = generate(prompt)
+    variations = []
+    
+    if not raw:
+        # Fallback to defaults if all API calls failed
+        for style_info in styles:
             variations.append(ReviewVariation(
                 rating       = 3,
                 review_title = f"My review of {req.item_title[:30]}",
                 review_text  = "Good product worth trying.",
                 style        = style_info["style"]
             ))
-            continue
-        
-        import re
-        
-        rating_match = re.search(r"RATING:\s*(\d)", raw)
-        rating       = int(rating_match.group(1)) if rating_match else 3
-        rating       = max(1, min(5, rating))
-        
-        title_match  = re.search(r"TITLE:\s*(.+?)(?=\nREVIEW:|\Z)", raw, re.DOTALL)
-        review_title = title_match.group(1).strip() if title_match else f"Review of {req.item_title[:30]}"
-        
-        review_match = re.search(r"REVIEW:\s*(.+)", raw, re.DOTALL)
-        review_text  = review_match.group(1).strip() if review_match else raw
-        
-        variations.append(ReviewVariation(
-            rating       = rating,
-            review_title = review_title[:100],
-            review_text  = review_text[:1000],
-            style        = style_info["style"]
-        ))
+    else:
+        for style_info in styles:
+            style_name = style_info["style"]
+            pattern = rf"===\s*STYLE:\s*{style_name}\s*===(.*?)(?====\s*STYLE:|\Z)"
+            match = re.search(pattern, raw, re.DOTALL | re.IGNORECASE)
+            
+            if match:
+                section = match.group(1).strip()
+                rating_match = re.search(r"RATING:\s*(\d)", section)
+                rating = int(rating_match.group(1)) if rating_match else 3
+                rating = max(1, min(5, rating))
+                
+                title_match = re.search(r"TITLE:\s*(.+?)(?=\nREVIEW:|\Z)", section, re.DOTALL | re.IGNORECASE)
+                review_title = title_match.group(1).strip() if title_match else f"Review of {req.item_title[:30]}"
+                
+                review_match = re.search(r"REVIEW:\s*(.+)", section, re.DOTALL | re.IGNORECASE)
+                review_text = review_match.group(1).strip() if review_match else section
+                
+                variations.append(ReviewVariation(
+                    rating       = rating,
+                    review_title = review_title[:100],
+                    review_text  = review_text[:1000],
+                    style        = style_name
+                ))
+            else:
+                # If a specific style failed to parse from the response, generate default
+                variations.append(ReviewVariation(
+                    rating       = 3,
+                    review_title = f"My review of {req.item_title[:30]}",
+                    review_text  = "Good product worth trying.",
+                    style        = style_name
+                ))
     
     return SimulateResponse(
         variations   = variations,
