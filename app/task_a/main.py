@@ -244,13 +244,14 @@ def generate(prompt: str) -> Optional[str]:
 
 
 class SimulateRequest(BaseModel):
-    user_id: Optional[str] = None
-    item_asin: str
-    item_title: str
-    item_description: str = ""
-    language: str = "english"
-    nigerian_mode: bool = True
-    num_variations: int = 1
+    user_id          : Optional[str] = None
+    user_persona     : Optional[str] = None
+    item_asin        : str
+    item_title       : str
+    item_description : str = ""
+    language         : str = "english"
+    nigerian_mode    : bool = True
+    num_variations   : int = 1
 
 
 class ReviewVariation(BaseModel):
@@ -286,63 +287,86 @@ def parse_review_output(raw: str, item_title: str) -> tuple[int, str, str]:
 
 @app.post("/simulate", response_model=SimulateResponse)
 def simulate(req: SimulateRequest):
-    language = (req.language or "english").lower()
-    lang_config = LANGUAGE_PROMPTS.get(language, LANGUAGE_PROMPTS["english"])
+    
+    lang_config    = LANGUAGE_PROMPTS.get(req.language, LANGUAGE_PROMPTS["english"])
     language_block = lang_config["system"] if req.nigerian_mode else ""
+    
+    # Determine persona source
+    if req.user_persona and len(req.user_persona.strip()) > 10:
+        persona_block = f"""YOU ARE SIMULATING A REVIEWER WITH THIS EXACT PERSONALITY:
+{req.user_persona}
 
-    num_variations = max(1, min(req.num_variations, 3))
-    styles = VARIATION_STYLES[:num_variations]
+CRITICAL: Stay in character completely. The rating, writing style, 
+tone, and language MUST match this persona exactly.
+A stingy critic MUST give 1-3 stars. An enthusiast MUST give 4-5 stars.
+A Pidgin speaker MUST use Pidgin naturally."""
+        mode = "custom_persona"
+    else:
+        persona_block = """YOU ARE SIMULATING A TYPICAL NIGERIAN PRODUCT REVIEWER.
+Generate a realistic, persona-consistent review."""
+        mode = "cold_start"
+    
+    styles   = VARIATION_STYLES[:min(req.num_variations, 3)]
     variations = []
-
+    
     for style_info in styles:
         prompt = f"""{language_block}
 
+{persona_block}
+
 PRODUCT TO REVIEW:
-Name: {req.item_title}
-ASIN: {req.item_asin}
-Description: {req.item_description or "A beauty and personal care product"}
+Name        : {req.item_title}
+ASIN        : {req.item_asin}
+Description : {req.item_description or "A beauty and personal care product"}
 
 REVIEW STYLE INSTRUCTION:
 {style_info["instruction"]}
 
-CRITICAL LANGUAGE REQUIREMENT:
-Write this review ENTIRELY in {lang_config["name"]}.
-{"Include authentic Pidgin/local language phrases naturally." if req.nigerian_mode else ""}
+LANGUAGE: Write the review in {lang_config["name"]}.
+{"Use authentic local language phrases naturally." if req.nigerian_mode else ""}
 
-Generate a realistic Amazon product review for this item.
+Generate a realistic review that sounds EXACTLY like this persona.
 
-Output in EXACTLY this format:
-RATING: [number 1-5]
+Output EXACTLY in this format — nothing else:
+RATING: [1-5]
 TITLE: [review title in {lang_config["name"]}]
 REVIEW: [full review text in {lang_config["name"]}]"""
 
         raw = generate(prompt)
+        
         if not raw:
-            variations.append(
-                ReviewVariation(
-                    rating=4,
-                    review_title=f"My thoughts on {req.item_title[:30]}",
-                    review_text="Good product, worth trying.",
-                    style=style_info["style"],
-                )
-            )
+            variations.append(ReviewVariation(
+                rating       = 3,
+                review_title = f"My review of {req.item_title[:30]}",
+                review_text  = "Good product worth trying.",
+                style        = style_info["style"]
+            ))
             continue
-
-        rating, review_title, review_text = parse_review_output(raw, req.item_title)
-        variations.append(
-            ReviewVariation(
-                rating=rating,
-                review_title=review_title,
-                review_text=review_text,
-                style=style_info["style"],
-            )
-        )
-
+        
+        import re
+        
+        rating_match = re.search(r"RATING:\s*(\d)", raw)
+        rating       = int(rating_match.group(1)) if rating_match else 3
+        rating       = max(1, min(5, rating))
+        
+        title_match  = re.search(r"TITLE:\s*(.+?)(?=\nREVIEW:|\Z)", raw, re.DOTALL)
+        review_title = title_match.group(1).strip() if title_match else f"Review of {req.item_title[:30]}"
+        
+        review_match = re.search(r"REVIEW:\s*(.+)", raw, re.DOTALL)
+        review_text  = review_match.group(1).strip() if review_match else raw
+        
+        variations.append(ReviewVariation(
+            rating       = rating,
+            review_title = review_title[:100],
+            review_text  = review_text[:1000],
+            style        = style_info["style"]
+        ))
+    
     return SimulateResponse(
-        variations=variations,
-        persona_type="cold_start",
-        mode="cold_start",
-        language=language,
+        variations   = variations,
+        persona_type = "custom" if mode == "custom_persona" else "cold_start",
+        mode         = mode,
+        language     = req.language
     )
 
 
